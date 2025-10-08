@@ -1,0 +1,51 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo Installing dependencies...
+      - npm ci
+  
+  pre_build:
+    commands:
+      - echo Pre-build phase...
+      - echo Current directory is $(pwd)
+      - ls -la
+  
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building Next.js application...
+      - npm run build
+      - echo Build completed on `date`
+  
+  post_build:
+    commands:
+      - echo Post-build phase...
+      - echo Syncing build output to S3...
+      - aws s3 sync out/ s3://${S3_BUCKET}/ --delete --cache-control "public, max-age=3600"
+      - echo Creating CloudFront invalidation...
+      - |
+        DISTRIBUTION_ID=$(aws cloudformation describe-stacks \
+          --stack-name portfolio-infrastructure \
+          --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
+          --output text 2>/dev/null || echo "")
+        if [ -n "$DISTRIBUTION_ID" ]; then
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+          echo "CloudFront invalidation created for distribution: $DISTRIBUTION_ID"
+        else
+          echo "CloudFront distribution ID not found, skipping invalidation"
+        fi
+      - echo Build completed successfully!
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: out
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - '.next/cache/**/*'
