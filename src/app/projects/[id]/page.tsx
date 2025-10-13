@@ -1,20 +1,24 @@
-
-import { PROJECTS_DATA } from "@/lib/data";
+import { PROJECTS_DATA, Project } from "@/lib/data";
 import { notFound } from "next/navigation";
 import {
-  Container, Box, Heading, Text, HStack, Tag, VStack, SimpleGrid, Image, Divider, UnorderedList, ListItem, GridItem, Link as ChakraLink
+  Container, Box, Heading, Text, HStack, Tag, VStack, SimpleGrid, Image, Divider, UnorderedList, ListItem, GridItem
 } from "@chakra-ui/react";
 
-type Props = {
-  params: { id: string };
-};
+
+// 静的エクスポート用: 全プロジェクトIDを返す（DynamoDB/API化も容易に対応可能）
+export async function generateStaticParams() {
+  // TODO: DynamoDB移行後はAPI経由でID一覧を取得するように変更
+  return PROJECTS_DATA.map((project) => ({ id: String(project.id) }));
+}
 
 
-export default async function ProjectDetailPage({ params }: Props) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default async function ProjectDetailPage(props: any) {
+  const { params } = props;
   const { id } = params;
-  const project = PROJECTS_DATA.find((p) => String(p.id) === id);
+  const project: Project | undefined = PROJECTS_DATA.find((p) => String(p.id) === id);
   if (!project || !project.detail) return notFound();
-  const { pdf, sections, role, tasks, features, architectureUrl, improvements } = project.detail;
+  const { sections, role, tasks, features, architectureUrl, improvements } = project.detail;
 
   return (
     <Container maxW="6xl" py={12}>
@@ -27,7 +31,7 @@ export default async function ProjectDetailPage({ params }: Props) {
           {project.summary}
         </Text>
         <HStack spacing={3} wrap="wrap" pt={4}>
-          {project.techStack.map((tech, idx) =>
+          {project.techStack.map((tech) =>
             tech.icon ? (
               <Tag key={tech.name} size="lg" colorScheme="blue" variant="solid">
                 <HStack>
@@ -52,7 +56,7 @@ export default async function ProjectDetailPage({ params }: Props) {
           <Heading as="h2" size="lg" mb={4}>自分のポジションと業務内容</Heading>
           <Text fontWeight="bold" mb={2}>ポジション: {role}</Text>
           <UnorderedList spacing={1} pl={4}>
-            {tasks && tasks.map((task: string, idx: number) => <ListItem key={idx}>{task}</ListItem>)}
+            {tasks && tasks.map((task: string) => <ListItem key={task}>{task}</ListItem>)}
           </UnorderedList>
         </GridItem>
         <GridItem>
@@ -65,7 +69,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       <Box mb={10}>
         <Heading as="h2" size="xl" mb={4}>システムの特徴</Heading>
         <UnorderedList spacing={2} pl={4} fontSize="lg">
-          {features && features.map((feature: string, idx: number) => <ListItem key={idx} fontWeight="semibold">{feature}</ListItem>)}
+          {features && features.map((feature: string) => <ListItem key={feature} fontWeight="semibold">{feature}</ListItem>)}
         </UnorderedList>
       </Box>
       {/* 4. アーキテクチャ図 */}
@@ -80,8 +84,8 @@ export default async function ProjectDetailPage({ params }: Props) {
       <Box mb={10}>
         <Heading as="h2" size="xl" mb={6}>工夫点・課題解決への貢献 💡</Heading>
         <VStack spacing={8} align="stretch">
-          {improvements && improvements.map((item: { title: string; description: string }, idx: number) => (
-            <Box key={idx} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
+          {improvements && improvements.map((item: { title: string; description: string }) => (
+            <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
               <Heading as="h3" size="md" mb={2} color="orange.600">{item.title}</Heading>
               <Text>{item.description}</Text>
             </Box>
