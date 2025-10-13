@@ -9,10 +9,11 @@
 ## ディレクトリ構成と主要ファイル
 - `src/app/`：Next.jsアプリのエントリーポイントとページ。`projects/`配下にプロジェクト詳細ページ。
 - `components/`：再利用可能なReactコンポーネント（例：`ProjectCard.tsx`, `Header.tsx`）。
-- `lib/data.ts`：プロジェクトや技術スタック等のデータ定義。
+- `lib/data.ts`：プロジェクトや技術スタック等のデータ定義。(最終的にDynamoDB等に移行予定)
 - `public/`：静的ファイル（画像等）。
 - `references/`：職務経歴やAWSアイコン等のリファレンス素材。
 - `scripts/`：運用用スクリプト（例：`move-aws-icons.ps1`）。
+- `infrastructure/`：テンプレートなどのAWS用のソースコードを格納する。
 
 ## 開発・ビルド・デプロイ
 - 開発サーバー起動：`npm run dev`
@@ -32,12 +33,19 @@
 - 職務経歴や説明文は`references/職務経歴.txt`を参照。
 - スクリプト実行時はPowerShell前提（Windows環境）。
 - CI/CDやIaCの詳細はAWS管理画面・CloudFormationテンプレートを参照。
+- Next.jsのルーティングは`app/`ディレクトリ構造に依存。
+- ChakraUIのコンポーネントは公式ドキュメントを参照。
+
+## フロントエンド・バックエンドのAI実装ルール
+- フロントエンド（Next.js/ChakraUI/静的エクスポート/ページ生成等）はAIエージェントが全面的に自動実装・最適化を担当する。
+- バックエンド（API Gateway, Lambda, DynamoDB連携やAPI実装、AWSリソース構築等）は、ユーザーから明示的な指示があった場合のみ対応し、原則として自動実装は行わない。必要な場合は必ずユーザーに事前確認を行う。
 
 ## 参考ファイル
 - `README.md`：全体概要・技術選定・アーキテクチャ方針
 - `src/app/projects/`：プロジェクト詳細ページの実装例
 - `components/ProjectCard.tsx`：プロジェクトカードのUIパターン
 - `lib/data.ts`：データ構造・型定義
+- `references/`：参考資料・素材であり、プロジェクト内で利用されるが、直接コード影響しないファイル群
 
 ---
 
