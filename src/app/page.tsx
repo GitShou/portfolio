@@ -41,7 +41,9 @@ export default function Home() {
               AWSを中心としたシステム設計・構築・運用、技術研修講師、業務自動化まで幅広く対応。
             </Text>
             <Text mb={6}>
-              200名以上への登壇・研修実績／プロジェクトリーダー・フリーランス・大手勤務の多様な経験
+              研修講師経験を活かし、延べ200名以上を対象とした技術研修の企画・実施実績があります。<br />
+              複雑なAWS認証などの技術課題も、分かりやすい資料作成を通じて組織へ還元しています。<br />
+              プロジェクトリーダー・フリーランス・大手勤務の多様な経験
             </Text>
             <Text fontSize="sm" color="teal.200" mb={2}>
               「未知を既知に変える」――技術力と伝える力で、組織や現場に新しい価値をもたらします。
@@ -86,27 +88,45 @@ export default function Home() {
           </Box>
           <Box flex="1">
             <Heading as="h3" size="sm" mb={2}>TECHNICAL SKILLS</Heading>
-            <HStack spacing={4} mb={2}>
-              <VStack>
-                <Avatar size="sm" src="/dummy-aws.png" bg="white" />
-                <Text fontSize="xs">AWS</Text>
-              </VStack>
-              <VStack>
-                <Avatar size="sm" src="/dummy-lambda.png" bg="white" />
-                <Text fontSize="xs">Lambda</Text>
-              </VStack>
-              <VStack>
-                <Avatar size="sm" src="/dummy-cloudformation.png" bg="white" />
-                <Text fontSize="xs">CloudFormation</Text>
-              </VStack>
-              <VStack>
-                <Avatar size="sm" src="/dummy-react.png" bg="white" />
-                <Text fontSize="xs">React</Text>
-              </VStack>
-              <VStack>
-                <Avatar size="sm" src="/dummy-typescript.png" bg="white" />
-                <Text fontSize="xs">TypeScript</Text>
-              </VStack>
+            <HStack spacing={2} mb={2} flexWrap="wrap">
+              {/* public/aws-icons配下のアイコンをすべて表示 */}
+              {[
+                "api-gateway_64.svg",
+                "lambda_64.svg",
+                "dynamodb_64.svg",
+                "cloudfront_64.svg",
+                "s3_64.svg",
+                "cognito_64.svg",
+                "cloudformation_64.svg",
+                "codecommit_64.svg",
+                "codebuild_64.svg",
+                "billing_64.svg",
+                "cost-explorer_64.svg",
+                "tag-editor_64.svg",
+                "athena_64.svg",
+                "glue_64.svg",
+                "cloudwatch_64.svg"
+              ].map((icon) => (
+                <Box
+                  key={icon}
+                  bg="white"
+                  borderRadius="full"
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  minW="48px"
+                  minH="48px"
+                  m={1}
+                >
+                  <img
+                    src={`/aws-icons/${icon}`}
+                    alt={icon.replace("_64.svg", "")}
+                    width={48}
+                    height={48}
+                    style={{ borderRadius: "50%" }}
+                  />
+                </Box>
+              ))}
             </HStack>
             {/* 技術力アピール追加 */}
             <Text fontSize="xs" color="teal.600">
