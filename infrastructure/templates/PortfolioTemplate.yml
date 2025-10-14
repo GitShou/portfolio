@@ -5,8 +5,7 @@ Parameters:
   ProjectName:
     Type: String
     Description: プロジェクト名（リソース名のプレフィックス）
-    default:
-      - "portfolio"
+    Default: "portfolio"
 
 Resources:
   # S3バケット（静的サイト用）
