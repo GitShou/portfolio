@@ -20,6 +20,7 @@
 - 本番ビルド：`npm run build`
 - 静的エクスポート：`npm run export`（必要に応じて）
 - AWSへのデプロイはCI/CDパイプライン経由（手動デプロイは推奨しない）
+- 開発はテンプレート駆動型で行う
 
 ## コーディング規約・パターン
 - TypeScript + React（関数コンポーネント）を標準とする。
@@ -27,6 +28,7 @@
 - データ取得や状態管理はNext.jsの標準機能（`getStaticProps`/`getServerSideProps`等）を優先。
 - AWSリソース連携はAPI経由で行い、直接SDKを使う場合は`lib/`配下にまとめる。
 - 画像やアイコンは`public/`または`references/aws-icons/`配下に配置。
+- APIGatewayはVPC内にデプロイし、WANから直接アクセスできないようにする。
 
 ## 注意事項・プロジェクト固有の知識
 - AWSアイコンは`references/aws-icons/`以下のカテゴリ・サイズごとに整理。
