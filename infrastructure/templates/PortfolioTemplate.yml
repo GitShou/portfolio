@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 基本的なAWSサーバーレス構成（S3, CloudFront, WAF, API Gateway, Lambda, DynamoDB, VPC, IAM等）のCloudFormationテンプレート雛形
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: プロジェクト名（リソース名のプレフィックス）
+
+Resources:
+  # S3バケット（静的サイト用）
+  StaticSiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-static-site"
+
+  # CloudFrontディストリビューション
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt StaticSiteBucket.DomainName
+            S3OriginConfig: {}
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+
+  # WAF WebACL（CloudFront用）
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${ProjectName}-waf"
+      Rules: []
+
+  # DynamoDBテーブル
+  ProjectTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${ProjectName}-projects"
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # Lambda関数（サンプル）
+  ProjectApiFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-api"
+      Handler: index.handler
+      Role: arn:aws:iam::123456789012:role/lambda-execution-role # TODO: 適切なIAMロールに修正
+      Runtime: nodejs18.x
+      Code:
+        ZipFile: |
+          exports.handler = async (event) => {
+            return { statusCode: 200, body: 'Hello from Lambda!' };
+          };
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ProjectTable
+
+  # API Gateway（HTTP APIサンプル）
+  ProjectApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${ProjectName}-api"
+      ProtocolType: HTTP
+
+  # VPC（サンプル、必要に応じて拡張）
+  ProjectVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+
+Outputs:
+  StaticSiteBucketName:
+    Value: !Ref StaticSiteBucket
+    Description: 静的サイト用S3バケット名
+  CloudFrontDomain:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Description: CloudFrontのドメイン名
+  ApiEndpoint:
+    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Description: API Gatewayエンドポイント
+  DynamoDBTableName:
+    Value: !Ref ProjectTable
+    Description: プロジェクト情報用DynamoDBテーブル名
