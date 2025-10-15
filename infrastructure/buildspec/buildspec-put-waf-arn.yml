@@ -12,16 +12,22 @@ phases:
       - ls -lR .
       - echo "=== /codebuild/output配下の構造 ==="
       - ls -lR /codebuild/output || true
-      
+
       - chmod +x infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh
   build:
     commands:
 
-      - echo "=== us-east-1 WAF ARNをDeployOutput/outputs.jsonから取得しSSMに格納 ==="
+      - echo "=== us-east-1 WAF ARNをoutput.jsonから取得しSSMに格納 ==="
       - |
-        WAF_ARN=$(jq -r '.Stacks[0].Outputs[] | select(.OutputKey=="WebAclArn") | .OutputValue' DeployOutput/outputs.json)
+        OUTPUT_JSON=$(find /codebuild/output -type f -name 'output.json' | head -n 1)
+        if [ -z "$OUTPUT_JSON" ]; then
+          echo "output.jsonが見つかりませんでした。" >&2
+          exit 1
+        fi
+        echo "output.jsonのパス: $OUTPUT_JSON"
+        WAF_ARN=$(jq -r '.Stacks[0].Outputs[] | select(.OutputKey=="WebAclArn") | .OutputValue' "$OUTPUT_JSON")
         if [ -z "$WAF_ARN" ]; then
-          echo "WAF ARNがDeployOutput/outputs.jsonから取得できませんでした。" >&2
+          echo "WAF ARNが$output.jsonから取得できませんでした。" >&2
           exit 1
         fi
         echo "取得したWAF ARN: $WAF_ARN"
