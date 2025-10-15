@@ -7,11 +7,30 @@ phases:
     commands:
       - echo "Installing AWS CLI if needed..."
       - pip install --upgrade awscli
-      - chmod +x infrastructure/scripts/put-waf-arn-to-ssm.sh
+      - chmod +x infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh
   build:
     commands:
-      - echo "=== us-east-1 WAF ARNをSSMに格納 ==="
-      - ./infrastructure/scripts/put-waf-arn-to-ssm.sh
+
+      - echo "=== us-east-1 WAF ARNをDeployOutput/outputs.jsonから取得しSSMに格納 ==="
+      - |
+        WAF_ARN=$(jq -r '.Stacks[0].Outputs[] | select(.OutputKey=="WebAclArn") | .OutputValue' DeployOutput/outputs.json)
+        if [ -z "$WAF_ARN" ]; then
+          echo "WAF ARNがDeployOutput/outputs.jsonから取得できませんでした。" >&2
+          exit 1
+        fi
+        echo "取得したWAF ARN: $WAF_ARN"
+        ./infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh "$WAF_ARN"
+
+      # EventBridgeでap-northeast-1に通知
+      - echo "=== ap-northeast-1へEventBridgeイベント通知 ==="
+      - |
+        aws events put-events --region ap-northeast-1 --entries '[
+          {
+            "Source": "custom.waf-pipeline",
+            "DetailType": "WAFDeployComplete",
+            "Detail": "{\"status\": \"SUCCEEDED\", \"wafArn\": \"'$WAF_ARN'\"}"
+          }
+        ]'
 
 artifacts:
   files:
