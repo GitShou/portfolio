@@ -8,9 +8,11 @@ phases:
       - echo "Installing AWS CLI if needed..."
       - pip install --upgrade awscli
 
-      - ls -l DeployOutput
-      - cat DeployOutput/outputs.json || echo "outputs.json not found"
-
+      - echo "=== ワークスペース全体の構造 ==="
+      - ls -lR .
+      - echo "=== /codebuild/output配下の構造 ==="
+      - ls -lR /codebuild/output || true
+      
       - chmod +x infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh
   build:
     commands:
