@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.x
+    commands:
+      - echo "Installing AWS CLI if needed..."
+      - pip install --upgrade awscli
+      - chmod +x infrastructure/scripts/put-waf-arn-to-ssm.sh
+  build:
+    commands:
+      - echo "=== us-east-1 WAF ARNをSSMに格納 ==="
+      - ./infrastructure/scripts/put-waf-arn-to-ssm.sh
+
+artifacts:
+  files:
+    - '**/*'
