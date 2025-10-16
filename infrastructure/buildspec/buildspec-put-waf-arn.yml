@@ -14,6 +14,9 @@ phases:
       - echo "親ディレクトリ"
       - ls -lR ..
 
+      - echo "output.jsonを表示"
+      - cat ../01/output.json
+
       - chmod +x infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh
   build:
     commands:
