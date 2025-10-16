@@ -40,12 +40,12 @@ phases:
       - echo "=== ap-northeast-1へEventBridgeイベント通知 ==="
       - |
         aws events put-events --region ap-northeast-1 \
-          --event-bus-name portfolio-waf-deploy-success-notify-from-us-east-1 \
           --entries '[
             {
               "Source": "custom.waf-pipeline",
               "DetailType": "WAFDeployComplete",
-              "Detail": "{\"status\": \"SUCCEEDED\", \"wafArn\": \"'$WAF_ARN'\"}"
+              "Detail": "{\"status\": \"SUCCEEDED\", \"wafArn\": \"'$WAF_ARN'\"}",
+              "EventBusName": "portfolio-waf-deploy-success-notify-from-us-east-1"
             }
           ]'
 
