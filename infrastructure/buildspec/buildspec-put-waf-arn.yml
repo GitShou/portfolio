@@ -29,7 +29,7 @@ phases:
         echo "取得したWAF ARN: $WAF_ARN"
         # SSM Parameter Storeに格納（overwrite有効）
         aws ssm put-parameter \
-          --region us-east-1 \
+          --region ap-northeast-1 \
           --name "/portfolio/waf/arn" \
           --type String \
           --value "$WAF_ARN" \
