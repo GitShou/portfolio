@@ -29,7 +29,14 @@ phases:
           exit 1
         fi
         echo "取得したWAF ARN: $WAF_ARN"
-        ./infrastructure/us-east-1/scripts/put-waf-arn-to-ssm.sh "$WAF_ARN"
+        # SSM Parameter Storeに格納（overwrite有効）
+        aws ssm put-parameter \
+          --region us-east-1 \
+          --name "/portfolio/waf/arn" \
+          --type String \
+          --value "$WAF_ARN" \
+          --overwrite
+        echo "WAF ARNをSSM Parameter Storeに格納しました: $WAF_ARN"
         
       # EventBridgeでap-northeast-1に通知
       - echo "=== ap-northeast-1へEventBridgeイベント通知 ==="
