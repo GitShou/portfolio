@@ -1,51 +1,33 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 基本的なAWSサーバーレス構成（S3, CloudFront, WAF, API Gateway, Lambda, DynamoDB, VPC, IAM等）のCloudFormationテンプレート雛形
+Transform: AWS::Serverless-2016-10-31
+Description: 基本的なAWSサーバーレス構成（S3, CloudFront, WAF, API Gateway, Lambda, DynamoDB, VPC, IAM等）のSAMテンプレート雛形
 
 Parameters:
   ProjectName:
     Type: String
     Description: プロジェクト名（リソース名のプレフィックス）
     Default: "portfolio"
+  WebAclArnParameter:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
+    Default: "/portfolio/waf/arn"
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 10
+    Tags:
+      project: !Ref ProjectName
 
 Resources:
-  # S3バケット（静的サイト用）
   StaticSiteBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${ProjectName}-static-site"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
 
-  # CloudFrontディストリビューション
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        Origins:
-          - Id: S3Origin
-            DomainName: !GetAtt StaticSiteBucket.DomainName
-            S3OriginConfig: {}
-        DefaultCacheBehavior:
-          TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          ForwardedValues:
-            QueryString: false
-            Cookies:
-              Forward: none
-
-  # WAF WebACL（CloudFront用）
-  WebACL:
-    Type: AWS::WAFv2::WebACL
-    Properties:
-      Scope: CLOUDFRONT
-      DefaultAction:
-        Allow: {}
-      VisibilityConfig:
-        SampledRequestsEnabled: true
-        CloudWatchMetricsEnabled: true
-        MetricName: !Sub "${ProjectName}-waf"
-      Rules: []
-
-  # DynamoDBテーブル
   ProjectTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -57,49 +39,157 @@ Resources:
         - AttributeName: id
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
 
-  # Lambda関数（サンプル）
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-lambda-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaDynamoDBPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
+                Resource: !GetAtt ProjectTable.Arn
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  ProjectApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "${ProjectName}-api"
+      StageName: Prod
+      Tags:
+        project: !Ref ProjectName
+
   ProjectApiFunction:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${ProjectName}-api"
       Handler: index.handler
-      Role: arn:aws:iam::123456789012:role/lambda-execution-role # TODO: 適切なIAMロールに修正
-      Runtime: nodejs18.x
-      Code:
-        ZipFile: |
-          exports.handler = async (event) => {
-            return { statusCode: 200, body: 'Hello from Lambda!' };
-          };
+      Role: !GetAtt LambdaExecutionRole.Arn
+      CodeUri: src/lambda/
       Environment:
         Variables:
           TABLE_NAME: !Ref ProjectTable
+      Events:
+        GetProjects:
+          Type: Api
+          Properties:
+            Path: /projects
+            Method: get
+            RestApiId: !Ref ProjectApi
+        CreateProject:
+          Type: Api
+          Properties:
+            Path: /projects
+            Method: post
+            RestApiId: !Ref ProjectApi
+        UpdateProject:
+          Type: Api
+          Properties:
+            Path: /projects/{id}
+            Method: put
+            RestApiId: !Ref ProjectApi
+        DeleteProject:
+          Type: Api
+          Properties:
+            Path: /projects/{id}
+            Method: delete
+            RestApiId: !Ref ProjectApi
 
-  # API Gateway（HTTP APIサンプル）
-  ProjectApi:
-    Type: AWS::ApiGatewayV2::Api
-    Properties:
-      Name: !Sub "${ProjectName}-api"
-      ProtocolType: HTTP
-
-  # VPC（サンプル、必要に応じて拡張）
   ProjectVPC:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: true
       EnableDnsHostnames: true
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::OriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "${ProjectName} static site OAI"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        WebACLId: !Ref WebAclArnParameter
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt StaticSiteBucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        Tags:
+          - Key: project
+            Value: !Ref ProjectName
+
+  StaticSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticSiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOAI}"
+            Action: "s3:GetObject"
+            Resource: !Sub "${StaticSiteBucket.Arn}/*"
 
 Outputs:
   StaticSiteBucketName:
     Value: !Ref StaticSiteBucket
     Description: 静的サイト用S3バケット名
-  CloudFrontDomain:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Description: CloudFrontのドメイン名
   ApiEndpoint:
-    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
     Description: API Gatewayエンドポイント
   DynamoDBTableName:
     Value: !Ref ProjectTable
     Description: プロジェクト情報用DynamoDBテーブル名
+  CloudFrontDistributionId:
+    Value: !Ref CloudFrontDistribution
+    Description: CloudFrontディストリビューションID
+  CloudFrontDistributionDomainName:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Description: CloudFrontディストリビューションのドメイン名

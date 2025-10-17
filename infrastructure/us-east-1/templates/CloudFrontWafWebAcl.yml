@@ -20,6 +20,9 @@ Resources:
         CloudWatchMetricsEnabled: true
         MetricName: !Ref WebAclName
       Rules: []  # 必要に応じてルールを追加
+      Tags:
+        - Key: project
+          Value: portfolio
 
 Outputs:
   WebACLArn:
