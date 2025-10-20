@@ -70,50 +70,6 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
-  ProjectApi:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub "${ProjectName}-api"
-      StageName: Prod
-      Tags:
-        project: !Ref ProjectName
-
-  ProjectApiFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${ProjectName}-api"
-      Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      CodeUri: src/lambda/
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref ProjectTable
-      Events:
-        GetProjects:
-          Type: Api
-          Properties:
-            Path: /projects
-            Method: get
-            RestApiId: !Ref ProjectApi
-        CreateProject:
-          Type: Api
-          Properties:
-            Path: /projects
-            Method: post
-            RestApiId: !Ref ProjectApi
-        UpdateProject:
-          Type: Api
-          Properties:
-            Path: /projects/{id}
-            Method: put
-            RestApiId: !Ref ProjectApi
-        DeleteProject:
-          Type: Api
-          Properties:
-            Path: /projects/{id}
-            Method: delete
-            RestApiId: !Ref ProjectApi
-
   ProjectVPC:
     Type: AWS::EC2::VPC
     Properties:
