@@ -133,6 +133,13 @@ Resources:
             Action: "s3:GetObject"
             Resource: !Sub "${StaticSiteBucket.Arn}/*"
 
+  ProjectApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Tags:
+        project: !Ref ProjectName
+
   GetProjectsFunction:
     Type: AWS::Serverless::Function
     Properties:
