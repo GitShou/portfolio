@@ -177,6 +177,58 @@ Resources:
             Action: "s3:GetObject"
             Resource: !Sub "${StaticSiteBucket.Arn}/*"
 
+  GetProjectsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: infrastructure/ap-northeast-1/Lambda/src/get-projects/
+      Handler: index.handler
+      Events:
+        GetProjects:
+          Type: Api
+          Properties:
+            Path: /projects
+            Method: get
+            RestApiId: !Ref ProjectApi
+
+  CreateProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: infrastructure/ap-northeast-1/Lambda/src/create-project/
+      Handler: index.handler
+      Events:
+        CreateProject:
+          Type: Api
+          Properties:
+            Path: /projects
+            Method: post
+            RestApiId: !Ref ProjectApi
+
+  UpdateProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: infrastructure/ap-northeast-1/Lambda/src/update-project/
+      Handler: index.handler
+      Events:
+        UpdateProject:
+          Type: Api
+          Properties:
+            Path: /projects/{id}
+            Method: put
+            RestApiId: !Ref ProjectApi
+
+  DeleteProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: infrastructure/ap-northeast-1/Lambda/src/delete-project/
+      Handler: index.handler
+      Events:
+        DeleteProject:
+          Type: Api
+          Properties:
+            Path: /projects/{id}
+            Method: delete
+            RestApiId: !Ref ProjectApi
+
 Outputs:
   StaticSiteBucketName:
     Value: !Ref StaticSiteBucket
