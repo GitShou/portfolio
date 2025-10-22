@@ -20,7 +20,7 @@ phases:
     commands:
       - cd ../ # go back to infrastructure/ap-northeast-1
       - pwd
-      - aws cloudformation package --template-file templates/Portfolio.yml --output-template-file portfolio.yml --s3-bucket portfolio-build-bucket-5352 --force-upload
+      - aws cloudformation package --template-file templates/Portfolio.yml --output-template-file ./portfolio.yml --s3-bucket portfolio-build-bucket-5352 --force-upload
 
   post_build:
     commands:
@@ -30,7 +30,7 @@ phases:
 artifacts:
   secondary-artifacts:
     SystemArtifact:
-      base-directory: infrastructure/ap-northeast-1/
+      base-directory: infrastructure/ap-northeast-1/templates
       files:
         - portfolio.yml
       name: SystemArtifact        
