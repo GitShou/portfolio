@@ -116,9 +116,9 @@ Resources:
         PriceClass: PriceClass_100
         ViewerCertificate:
           CloudFrontDefaultCertificate: true
-        Tags:
-          - Key: project
-            Value: !Ref ProjectName
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
 
   StaticSiteBucketPolicy:
     Type: AWS::S3::BucketPolicy
