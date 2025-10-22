@@ -143,7 +143,7 @@ Resources:
   GetProjectsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: infrastructure/ap-northeast-1/Lambda/src/get-projects/
+      CodeUri: ../Lambda/src/get-projects/ #テンプレートからの相対パス
       Handler: index.handler
       Events:
         GetProjects:
@@ -156,7 +156,7 @@ Resources:
   CreateProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: infrastructure/ap-northeast-1/Lambda/src/create-project/
+      CodeUri: ../Lambda/src/create-project/
       Handler: index.handler
       Events:
         CreateProject:
@@ -169,7 +169,7 @@ Resources:
   UpdateProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: infrastructure/ap-northeast-1/Lambda/src/update-project/
+      CodeUri: ../Lambda/src/update-project/
       Handler: index.handler
       Events:
         UpdateProject:
@@ -182,7 +182,7 @@ Resources:
   DeleteProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: infrastructure/ap-northeast-1/Lambda/src/delete-project/
+      CodeUri: ../Lambda/src/delete-project/
       Handler: index.handler
       Events:
         DeleteProject:
