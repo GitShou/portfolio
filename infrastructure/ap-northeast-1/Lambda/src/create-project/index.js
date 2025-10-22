@@ -1,7 +1,7 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const buildDocumentClient = () =>
   DynamoDBDocumentClient.from(
@@ -17,7 +17,7 @@ const buildDocumentClient = () =>
 // テストでDocumentClientやUUID生成を差し替えられるようにするファクトリ。
 export function createHandler({ documentClient, uuidGenerator } = {}) {
   const dynamoDb = documentClient ?? buildDocumentClient();
-  const generateId = uuidGenerator ?? uuidv4;
+  const generateId = uuidGenerator ?? randomUUID;
 
   return async function handler(event) {
     try {
