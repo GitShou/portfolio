@@ -1,72 +1,78 @@
-const { expect } = require('chai');
-const proxyquire = require('proxyquire').noCallThru();
 
-const sinon = require('sinon');
-let documentClientMock;
-let createProject;
-const uuidMock = () => 'mock-uuid-1234';
+import { expect } from 'chai';
+import sinon from 'sinon';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 
-beforeEach(() => {
-  documentClientMock = {
-    put: sinon.stub(),
-    get: sinon.stub()
-  };
-  const AWSMock = {
-    DynamoDB: {
-      DocumentClient: function() { return documentClientMock; }
-    }
-  };
-  createProject = proxyquire('../src/create-project/index', {
-    'aws-sdk': AWSMock,
-    'uuid': { v4: uuidMock }
-  }).handler;
-});
+describe('create-project handler', () => {
+  let createProject;
+  let sendStub;
 
-describe('create-project', () => {
-  it('関数であること', () => {
+  beforeEach(async () => {
+    process.env.PROJECT_TABLE_NAME = 'ProjectsTable';
+    process.env.REGION = 'ap-northeast-1';
+  const module = await import('../src/create-project/index.js');
+  sendStub = sinon.stub();
+    // ESMの直接スタブを避けるため、ファクトリにモック依存を注入する。
+  const uuidStub = sinon.stub().returns('mock-uuid-1234');
+  createProject = module.createHandler({ documentClient: { send: sendStub }, uuidGenerator: uuidStub });
+  });
+
+  afterEach(() => {
+  sinon.restore();
+    delete process.env.PROJECT_TABLE_NAME;
+    delete process.env.REGION;
+  });
+
+  it('handlerが関数である', () => {
     expect(createProject).to.be.a('function');
   });
 
-  it('必須項目でプロジェクト作成できる', async () => {
-    documentClientMock.put.returns({ promise: () => Promise.resolve({ Attributes: { id: 100 } }) });
+  it('必須項目が揃っていればプロジェクトを作成し201を返す', async () => {
+  sendStub.resolves({});
+
     const event = {
       body: JSON.stringify({
-        id: 100,
         title: '新規プロジェクト',
         summary: 'テスト用プロジェクト',
-        techStack: [{ name: 'Node.js', icon: '' }]
+        techStack: ['Node.js']
       })
     };
+
     const result = await createProject(event);
-  expect(result).to.have.property('statusCode', 201);
+
+    expect(result.statusCode).to.equal(201);
   const body = JSON.parse(result.body);
-  expect(body).to.have.property('project');
-  expect(body.project).to.have.property('id', 'mock-uuid-1234');
+  expect(body.project.id).to.equal('mock-uuid-1234');
+  expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(PutCommand))).to.be.true;
   });
 
-  it('重複idでは作成に失敗する', async () => {
-    documentClientMock.put.returns({ promise: () => Promise.reject(new Error('Duplicate')) });
+  it('DynamoDBエラー時は500を返す', async () => {
+    sendStub.rejects(new Error('Duplicate'));
+
     const event = {
       body: JSON.stringify({
-        id: 100,
         title: '重複プロジェクト',
         summary: '重複テスト',
-        techStack: [{ name: 'Node.js', icon: '' }]
+        techStack: ['Node.js']
       })
     };
+
     const result = await createProject(event);
-    expect(result.statusCode).to.not.equal(200);
+
+    expect(result.statusCode).to.equal(500);
+    expect(sendStub.calledOnce).to.be.true;
   });
 
-  it('必須項目が不足している場合は失敗する', async () => {
-    documentClientMock.put.returns({ promise: () => Promise.reject(new Error('Validation error')) });
+  it('必須項目が不足している場合は400を返し、DynamoDBを呼ばない', async () => {
     const event = {
       body: JSON.stringify({
         title: '必須項目不足',
-        summary: 'idがない'
       })
     };
+
     const result = await createProject(event);
-    expect(result.statusCode).to.not.equal(200);
+
+    expect(result.statusCode).to.equal(400);
+    expect(sendStub.notCalled).to.be.true;
   });
 });

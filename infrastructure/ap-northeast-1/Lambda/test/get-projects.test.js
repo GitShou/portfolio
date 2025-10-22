@@ -1,56 +1,58 @@
-const { expect } = require('chai');
-const sinon = require('sinon');
-const proxyquire = require('proxyquire').noCallThru();
 
-let documentClientMock;
-let getProjects;
+import { expect } from 'chai';
+import sinon from 'sinon';
+import { ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-beforeEach(() => {
-  documentClientMock = {
-    scan: sinon.stub()
-  };
-  const AWSMock = {
-    DynamoDB: {
-      DocumentClient: function() { return documentClientMock; }
-    }
-  };
-  getProjects = proxyquire('../src/get-projects/index', {
-    'aws-sdk': AWSMock
-  }).handler;
-});
+describe('get-projects handler', () => {
+  let getProjects;
+  let sendStub;
 
-describe('get-projects', () => {
-  it('関数であること', () => {
+  beforeEach(async () => {
+    process.env.PROJECT_TABLE_NAME = 'ProjectsTable';
+    process.env.REGION = 'ap-northeast-1';
+    const module = await import('../src/get-projects/index.js');
+    sendStub = sinon.stub();
+    // モッククライアントを注入してESMモジュールの直接スタブを避ける。
+    getProjects = module.createHandler({ documentClient: { send: sendStub } });
+  });
+
+  afterEach(() => {
+    sinon.restore();
+    delete process.env.PROJECT_TABLE_NAME;
+    delete process.env.REGION;
+  });
+
+  it('handlerが関数である', () => {
     expect(getProjects).to.be.a('function');
   });
 
+  it('全プロジェクトを取得して200を返す', async () => {
+    sendStub.resolves({ Items: [{ id: 1 }, { id: 2 }] });
 
-  it('全プロジェクトを取得できる', async () => {
-    documentClientMock.scan.returns({ promise: () => Promise.resolve({ Items: [{ id: 1 }, { id: 2 }] }) });
-    const event = {};
-    const result = await getProjects(event);
-    expect(result).to.have.property('statusCode', 200);
-    const projects = JSON.parse(result.body).projects;
-    expect(projects).to.be.an('array');
-    expect(projects.length).to.equal(2);
+    const result = await getProjects({});
+
+    expect(result.statusCode).to.equal(200);
+    const { projects } = JSON.parse(result.body);
+    expect(projects).to.deep.equal([{ id: 1 }, { id: 2 }]);
+    expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(ScanCommand))).to.be.true;
   });
 
   it('プロジェクトが存在しない場合は空配列を返す', async () => {
-    documentClientMock.scan.returns({ promise: () => Promise.resolve({ Items: [] }) });
-    const event = {};
-    const result = await getProjects(event);
-    expect(result).to.have.property('statusCode', 200);
-    const projects = JSON.parse(result.body).projects;
+    sendStub.resolves({ Items: [] });
+
+    const result = await getProjects({});
+
+    expect(result.statusCode).to.equal(200);
+    const { projects } = JSON.parse(result.body);
     expect(projects).to.be.an('array').that.is.empty;
   });
 
-  it('DynamoDBエラー時に例外を返す', async () => {
-    documentClientMock.scan.returns({ promise: () => Promise.reject(new Error('DynamoDB error')) });
-    const event = {};
-    try {
-      await getProjects(event);
-    } catch (err) {
-      expect(err).to.exist;
-    }
+  it('DynamoDBエラー時は500を返す', async () => {
+    sendStub.rejects(new Error('DynamoDB error'));
+
+    const result = await getProjects({});
+
+    expect(result.statusCode).to.equal(500);
+    expect(sendStub.calledOnce).to.be.true;
   });
 });

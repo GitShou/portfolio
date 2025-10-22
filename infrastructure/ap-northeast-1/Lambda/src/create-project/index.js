@@ -1,58 +1,64 @@
-'use strict';
 
-const AWS = require('aws-sdk');
-const { v4: uuidv4 } = require('uuid');
-const projectTable = process.env.PROJECT_TABLE_NAME;
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { v4 as uuidv4 } from 'uuid';
 
-const dynamoDb = new AWS.DynamoDB.DocumentClient({
-  region: process.env.REGION
-});
+const buildDocumentClient = () =>
+  DynamoDBDocumentClient.from(
+    new DynamoDBClient({ region: process.env.REGION }),
+    {
+      marshallOptions: {
+        removeUndefinedValues: true,
+        convertEmptyValues: true,
+      },
+    }
+  );
 
-/**
- * Project型に沿ったバリデーション・格納例
- * idはuuidで自動生成
- */
-exports.handler = async (event) => {
-  try {
-    const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+// テストでDocumentClientやUUID生成を差し替えられるようにするファクトリ。
+export function createHandler({ documentClient, uuidGenerator } = {}) {
+  const dynamoDb = documentClient ?? buildDocumentClient();
+  const generateId = uuidGenerator ?? uuidv4;
 
-    // 必須項目チェック
-    if (!body.title || !body.summary || !Array.isArray(body.techStack)) {
+  return async function handler(event) {
+    try {
+      const projectTable = process.env.PROJECT_TABLE_NAME;
+      const body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+
+      if (!body?.title || !body.summary || !Array.isArray(body.techStack)) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ message: 'title, summary, techStackは必須です' }),
+        };
+      }
+
+      const now = new Date().toISOString();
+      const projectItem = {
+        id: generateId(),
+        title: body.title,
+        summary: body.summary,
+        techStack: body.techStack,
+        detail: body.detail ?? null,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const command = new PutCommand({
+        TableName: projectTable,
+        Item: projectItem,
+      });
+      await dynamoDb.send(command);
+
       return {
-        statusCode: 400,
-        body: JSON.stringify({ message: 'title, summary, techStackは必須です' }),
+        statusCode: 201,
+        body: JSON.stringify({ message: 'プロジェクトを作成しました', project: projectItem }),
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'エラーが発生しました', error: error.message }),
       };
     }
+  };
+}
 
-    // idはuuidで自動生成
-    const id = uuidv4();
-
-    // DynamoDBに格納するプロジェクトデータ
-    const projectItem = {
-      id,
-      title: body.title,
-      summary: body.summary,
-      techStack: body.techStack,
-      detail: body.detail || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const params = {
-      TableName: projectTable,
-      Item: projectItem,
-    };
-
-    await dynamoDb.put(params).promise();
-
-    return {
-      statusCode: 201,
-      body: JSON.stringify({ message: 'プロジェクトを作成しました', project: projectItem }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'エラーが発生しました', error: error.message }),
-    };
-  }
-};
+export const handler = createHandler();

@@ -4,23 +4,24 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "nyc mocha --recursive --reporter mochawesome --reporter-options reportDir=./report/mocha"
+        "test": "c8 --reporter=text --reporter=lcov --report-dir=./report/c8 --temp-directory=./report/.coverage --clean mocha -- --recursive --reporter mochawesome --reporter-options reportDir=./report/mocha,reportFilename=index,inlineAssets=true"
     },
     "author": "",
     "license": "ISC",
+    "type": "module",
     "devDependencies": {
         "chai": "^6.2.0",
         "chai-as-promised": "^8.0.2",
         "chai-exclude": "^3.0.1",
         "dotenv": "^17.2.3",
         "expect": "^30.2.0",
-        "nyc": "^15.1.0",
         "mocha": "^11.7.4",
-        "mochawesome": "^7.1.4",
-        "proxyquire": "^2.1.3",
+        "mochawesome": "^2.0.5",
+        "c8": "^9.1.0",
         "sinon": "^21.0.0"
     },
     "dependencies": {
-        "@aws-sdk/client-s3": "^3.592.0"
+        "@aws-sdk/client-dynamodb": "^3.592.0",
+        "@aws-sdk/lib-dynamodb": "^3.592.0"
     }
 }
