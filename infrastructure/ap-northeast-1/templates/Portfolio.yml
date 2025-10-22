@@ -81,7 +81,7 @@ Resources:
           Value: !Ref ProjectName
 
   CloudFrontOAI:
-    Type: AWS::CloudFront::OriginAccessIdentity
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: !Sub "${ProjectName} static site OAI"
