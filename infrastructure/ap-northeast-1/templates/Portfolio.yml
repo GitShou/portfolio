@@ -6,7 +6,7 @@ Parameters:
   ProjectName:
     Type: String
     Description: プロジェクト名（リソース名のプレフィックス）
-    Default: "portfolio"
+    Default: "portfolio5352"
   WebAclArnParameter:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
