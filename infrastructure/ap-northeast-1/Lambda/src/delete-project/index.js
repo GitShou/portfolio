@@ -27,11 +27,22 @@ export function createHandler({ documentClient } = {}) {
           body: JSON.stringify({ message: 'idは必須です' }),
         };
       }
+      const partitionKeyValue = typeof id === 'number' ? id.toString() : String(id);
       const command = new DeleteCommand({
         TableName: projectTable,
-        Key: { id },
+        Key: {
+          EntityPartitionKey: `PROJECT#${partitionKeyValue}`,
+          EntitySortKey: 'PROFILE',
+        },
+        ReturnValues: 'ALL_OLD',
       });
-      await dynamoDb.send(command);
+      const result = await dynamoDb.send(command);
+      if (!result.Attributes) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({ message: '指定されたプロジェクトは存在しません' }),
+        };
+      }
       return {
         statusCode: 200,
         body: JSON.stringify({ message: 'プロジェクトを削除しました', id }),

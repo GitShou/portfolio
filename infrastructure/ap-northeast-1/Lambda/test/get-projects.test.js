@@ -1,7 +1,7 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 describe('get-projects handler', () => {
   let getProjects;
@@ -27,14 +27,36 @@ describe('get-projects handler', () => {
   });
 
   it('全プロジェクトを取得して200を返す', async () => {
-    sendStub.resolves({ Items: [{ id: 1 }, { id: 2 }] });
+    sendStub.resolves({
+      Items: [
+        {
+          EntityPartitionKey: 'PROJECT#1',
+          EntitySortKey: 'PROFILE',
+          PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
+          PortfolioIndexSortKey: 'ORDER#0001',
+          id: 1,
+          title: 'Project 1',
+        },
+        {
+          EntityPartitionKey: 'PROJECT#2',
+          EntitySortKey: 'PROFILE',
+          PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
+          PortfolioIndexSortKey: 'ORDER#0002',
+          id: 2,
+          title: 'Project 2',
+        },
+      ],
+    });
 
     const result = await getProjects({});
 
     expect(result.statusCode).to.equal(200);
     const { projects } = JSON.parse(result.body);
-    expect(projects).to.deep.equal([{ id: 1 }, { id: 2 }]);
-    expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(ScanCommand))).to.be.true;
+    expect(projects).to.deep.equal([
+      { id: 1, title: 'Project 1' },
+      { id: 2, title: 'Project 2' },
+    ]);
+    expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(QueryCommand))).to.be.true;
   });
 
   it('プロジェクトが存在しない場合は空配列を返す', async () => {

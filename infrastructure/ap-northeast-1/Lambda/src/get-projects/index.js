@@ -1,6 +1,6 @@
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const buildDocumentClient = () =>
   DynamoDBDocumentClient.from(
@@ -13,6 +13,20 @@ const buildDocumentClient = () =>
     }
   );
 
+const sanitizeProjectItem = (item) => {
+  if (!item) return null;
+  const {
+    EntityPartitionKey,
+    EntitySortKey,
+    PortfolioIndexPartitionKey,
+    PortfolioIndexSortKey,
+    ProjectTypeIndexPartitionKey,
+    ProjectTypeIndexSortKey,
+    ...project
+  } = item;
+  return project;
+};
+
 // テスト用にスタブ化したクライアントを受け取れるようにしたファクトリ。
 export function createHandler({ documentClient } = {}) {
   const dynamoDb = documentClient ?? buildDocumentClient();
@@ -20,9 +34,20 @@ export function createHandler({ documentClient } = {}) {
   return async function handler(event) {
     try {
       const projectTable = process.env.PROJECT_TABLE_NAME;
-      const command = new ScanCommand({ TableName: projectTable });
+      const command = new QueryCommand({
+        TableName: projectTable,
+        IndexName: 'GSI1',
+        KeyConditionExpression: '#pk = :pk',
+        ExpressionAttributeNames: {
+          '#pk': 'PortfolioIndexPartitionKey',
+        },
+        ExpressionAttributeValues: {
+          ':pk': 'PORTFOLIO#ALL',
+        },
+        ScanIndexForward: true,
+      });
       const result = await dynamoDb.send(command);
-      const projects = result.Items ?? [];
+      const projects = (result.Items ?? []).map(sanitizeProjectItem);
       return {
         statusCode: 200,
         body: JSON.stringify({ projects }),

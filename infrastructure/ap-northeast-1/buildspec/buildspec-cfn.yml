@@ -39,4 +39,14 @@ artifacts:
         - package-lock.json
         - next.config.ts
         - tsconfig.json
+        - infrastructure/ap-northeast-1/buildspec/buildspec-nextjs.yml
       name: WebArtifact
+
+    DataArtifact:
+      base-directory: infrastructure/ap-northeast-1
+      files:
+        - 'buildspec/buildspec-seed-projects.yml'
+        - 'scripts/tsconfig.seed.json'
+        - 'scripts/seed-projects.ts'
+        - 'data/ProjectData.ts'
+      name: DataArtifact

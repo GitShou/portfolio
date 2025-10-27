@@ -1,0 +1,32 @@
+version: 0.2
+
+env:
+  variables:
+    NODE_ENV: production
+  parameter-store:
+    PROJECTS_API_BASE_URL: /portfolio5352/api/base-url
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "Installing TypeScript compiler"
+      - npm install --no-save typescript
+  build:
+    commands:
+      - echo "Validating environment variables"
+      - |
+        if [ -z "$PROJECTS_API_BASE_URL" ]; then
+          echo "PROJECTS_API_BASE_URL environment variable must be set" >&2
+          exit 1
+        fi
+      - echo "Compiling TypeScript sources for seeding"
+      - npx tsc --project tsconfig.seed.json
+      - echo "Seeding projects via API if the table is empty"
+      - node dist/scripts/seed-projects.js
+
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: 'yes'

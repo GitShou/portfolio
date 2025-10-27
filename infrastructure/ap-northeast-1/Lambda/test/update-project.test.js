@@ -1,7 +1,7 @@
 
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 describe('update-project handler', () => {
   let updateProject;
@@ -27,7 +27,20 @@ describe('update-project handler', () => {
   });
 
   it('既存プロジェクトを更新して200を返す', async () => {
-    sendStub.resolves({ Attributes: { id: '100', title: '更新後タイトル' } });
+    sendStub.onFirstCall().resolves({
+      Item: {
+        EntityPartitionKey: 'PROJECT#100',
+        EntitySortKey: 'PROFILE',
+        PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
+        PortfolioIndexSortKey: 'ORDER#0001',
+        id: '100',
+        title: '旧タイトル',
+        summary: '旧要約',
+        techStack: ['Node.js'],
+        metadata: { order: 1, status: 'PUBLISHED', updatedAt: '2024-01-01T00:00:00Z' },
+      },
+    });
+    sendStub.onSecondCall().resolves({});
 
     const event = {
       pathParameters: { id: '100' },
@@ -38,8 +51,10 @@ describe('update-project handler', () => {
 
     expect(result.statusCode).to.equal(200);
     const response = JSON.parse(result.body);
-    expect(response.project).to.deep.equal({ id: '100', title: '更新後タイトル' });
-    expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(UpdateCommand))).to.be.true;
+  expect(response.project.id).to.equal('100');
+  expect(response.project.title).to.equal('更新後タイトル');
+  expect(sendStub.firstCall.args[0]).to.be.instanceOf(GetCommand);
+  expect(sendStub.secondCall.args[0]).to.be.instanceOf(PutCommand);
   });
 
   it('idまたはbodyが無い場合は400を返し、DynamoDBを呼ばない', async () => {
@@ -50,12 +65,22 @@ describe('update-project handler', () => {
 
     const result = await updateProject(event);
 
-    expect(result.statusCode).to.equal(400);
-    expect(sendStub.notCalled).to.be.true;
+  expect(result.statusCode).to.equal(400);
+  expect(sendStub.notCalled).to.be.true;
   });
 
   it('DynamoDBエラー時は500を返す', async () => {
-    sendStub.rejects(new Error('Not found'));
+    sendStub.onFirstCall().resolves({
+      Item: {
+        EntityPartitionKey: 'PROJECT#9999',
+        EntitySortKey: 'PROFILE',
+        PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
+        PortfolioIndexSortKey: 'ORDER#9999',
+        id: '9999',
+        metadata: { order: 9999 },
+      },
+    });
+    sendStub.onSecondCall().rejects(new Error('Not found'));
 
     const event = {
       pathParameters: { id: '9999' },
@@ -64,7 +89,21 @@ describe('update-project handler', () => {
 
     const result = await updateProject(event);
 
-    expect(result.statusCode).to.equal(500);
+  expect(result.statusCode).to.equal(500);
+  expect(sendStub.calledTwice).to.be.true;
+  });
+
+  it('対象プロジェクトが存在しない場合は404を返す', async () => {
+    sendStub.onFirstCall().resolves({ Item: undefined });
+
+    const event = {
+      pathParameters: { id: '101' },
+      body: JSON.stringify({ title: '更新後タイトル' })
+    };
+
+    const result = await updateProject(event);
+
+    expect(result.statusCode).to.equal(404);
     expect(sendStub.calledOnce).to.be.true;
   });
 });

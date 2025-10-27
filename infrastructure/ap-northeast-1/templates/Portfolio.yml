@@ -7,6 +7,10 @@ Parameters:
     Type: String
     Description: プロジェクト名（リソース名のプレフィックス）
     Default: "portfolio5352"
+  ApiStageName:
+    Type: String
+    Description: API Gateway のステージ名
+    Default: "prod"
   WebAclArnParameter:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
@@ -18,6 +22,9 @@ Globals:
     Timeout: 10
     Tags:
       project: !Ref ProjectName
+    Environment:
+      Variables:
+        PROJECT_TABLE_NAME: !Ref ProjectTable
 
 Resources:
   StaticSiteBucket:
@@ -30,18 +37,68 @@ Resources:
 
   ProjectTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain  # テーブル構造に変化が生じても旧バージョンは残す
     Properties:
-      TableName: !Sub "${ProjectName}-projects"
+      TableName: !Sub "${ProjectName}-projects-v1"
       AttributeDefinitions:
-        - AttributeName: id
+        - AttributeName: EntityPartitionKey
+          AttributeType: S
+        - AttributeName: EntitySortKey
+          AttributeType: S
+        - AttributeName: PortfolioIndexPartitionKey
+          AttributeType: S
+        - AttributeName: PortfolioIndexSortKey
+          AttributeType: S
+        - AttributeName: ProjectTypeIndexPartitionKey
+          AttributeType: S
+        - AttributeName: ProjectTypeIndexSortKey
           AttributeType: S
       KeySchema:
-        - AttributeName: id
+        - AttributeName: EntityPartitionKey
           KeyType: HASH
+        - AttributeName: EntitySortKey
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: PortfolioIndexPartitionKey
+              KeyType: HASH
+            - AttributeName: PortfolioIndexSortKey
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: ProjectTypeIndexPartitionKey
+              KeyType: HASH
+            - AttributeName: ProjectTypeIndexSortKey
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
       BillingMode: PAY_PER_REQUEST
       Tags:
         - Key: project
           Value: !Ref ProjectName
+
+  ProjectTableNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/dynamodb/project-table-name"
+      Type: String
+      Value: !Ref ProjectTable
+      Description: !Sub "${ProjectName} DynamoDB projects table name"
+      Tags:
+        project: !Ref ProjectName
+
+  ProjectApiBaseUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/api/base-url"
+      Type: String
+      Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
+      Description: !Sub "${ProjectName} projects API base URL"
+      Tags:
+        project: !Ref ProjectName
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -136,7 +193,7 @@ Resources:
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:
-      StageName: prod
+      StageName: !Ref ApiStageName
       Tags:
         project: !Ref ProjectName
 
@@ -197,7 +254,7 @@ Outputs:
     Value: !Ref StaticSiteBucket
     Description: 静的サイト用S3バケット名
   ApiEndpoint:
-    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
     Description: API Gatewayエンドポイント
   DynamoDBTableName:
     Value: !Ref ProjectTable

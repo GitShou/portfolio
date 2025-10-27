@@ -14,6 +14,19 @@ const buildDocumentClient = () =>
     }
   );
 
+const buildOrderToken = (order) =>
+  `ORDER#${order.toString().padStart(4, '0')}`;
+
+const buildFallbackOrderToken = () =>
+  `ORDER#${Date.now().toString().padStart(13, '0')}`;
+
+const sanitizeId = (candidateId, fallbackId) => {
+  if (candidateId === undefined || candidateId === null) {
+    return fallbackId;
+  }
+  return typeof candidateId === 'number' ? candidateId : String(candidateId);
+};
+
 // テストでDocumentClientやUUID生成を差し替えられるようにするファクトリ。
 export function createHandler({ documentClient, uuidGenerator } = {}) {
   const dynamoDb = documentClient ?? buildDocumentClient();
@@ -32,25 +45,70 @@ export function createHandler({ documentClient, uuidGenerator } = {}) {
       }
 
       const now = new Date().toISOString();
-      const projectItem = {
-        id: generateId(),
-        title: body.title,
-        summary: body.summary,
-        techStack: body.techStack,
-        detail: body.detail ?? null,
+      const providedId = body.id;
+      const generatedId = generateId();
+      const id = sanitizeId(providedId, generatedId);
+      const idForPartition = typeof id === 'number' ? id : id.toString();
+
+      const detail = body.detail ?? null;
+      const projectType = detail?.type ?? body.type ?? null;
+
+      const metadata = {
+        status: body.metadata?.status ?? 'PUBLISHED',
+        order: typeof body.metadata?.order === 'number' ? body.metadata.order : null,
         createdAt: now,
         updatedAt: now,
       };
 
+      const orderToken =
+        metadata.order !== null
+          ? buildOrderToken(metadata.order)
+          : buildFallbackOrderToken();
+
+      const projectItem = {
+        EntityPartitionKey: `PROJECT#${idForPartition}`,
+        EntitySortKey: 'PROFILE',
+        PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
+        PortfolioIndexSortKey: orderToken,
+        id,
+        title: body.title,
+        summary: body.summary,
+        techStack: body.techStack,
+        detail,
+        metadata,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      if (projectType) {
+        projectItem.type = projectType;
+        projectItem.ProjectTypeIndexPartitionKey = `TYPE#${projectType}`;
+        projectItem.ProjectTypeIndexSortKey = orderToken;
+      }
+
       const command = new PutCommand({
         TableName: projectTable,
         Item: projectItem,
+        ConditionExpression:
+          'attribute_not_exists(EntityPartitionKey) AND attribute_not_exists(EntitySortKey)',
       });
       await dynamoDb.send(command);
 
+      const responseProject = {
+        id,
+        title: body.title,
+        summary: body.summary,
+        techStack: body.techStack,
+        detail,
+        metadata,
+        type: projectType,
+        createdAt: now,
+        updatedAt: now,
+      };
+
       return {
         statusCode: 201,
-        body: JSON.stringify({ message: 'プロジェクトを作成しました', project: projectItem }),
+        body: JSON.stringify({ message: 'プロジェクトを作成しました', project: responseProject }),
       };
     } catch (error) {
       return {

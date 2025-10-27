@@ -34,8 +34,15 @@ describe('create-project handler', () => {
       body: JSON.stringify({
         title: '新規プロジェクト',
         summary: 'テスト用プロジェクト',
-        techStack: ['Node.js']
-      })
+        techStack: ['Node.js'],
+        metadata: {
+          order: 1,
+          status: 'PUBLISHED',
+        },
+        detail: {
+          type: 'migration',
+        },
+      }),
     };
 
     const result = await createProject(event);
@@ -43,7 +50,16 @@ describe('create-project handler', () => {
     expect(result.statusCode).to.equal(201);
     const body = JSON.parse(result.body);
     expect(body.project.id).to.equal('mock-uuid-1234');
-    expect(sendStub.calledOnceWithMatch(sinon.match.instanceOf(PutCommand))).to.be.true;
+    expect(body.project.metadata.order).to.equal(1);
+    expect(body.project.type).to.equal('migration');
+
+    sinon.assert.calledOnce(sendStub);
+    const command = sendStub.firstCall.args[0];
+    expect(command).to.be.instanceOf(PutCommand);
+    expect(command.input.Item.EntityPartitionKey).to.equal('PROJECT#mock-uuid-1234');
+    expect(command.input.Item.PortfolioIndexPartitionKey).to.equal('PORTFOLIO#ALL');
+    expect(command.input.Item.ProjectTypeIndexPartitionKey).to.equal('TYPE#migration');
+    expect(command.input.ConditionExpression).to.include('attribute_not_exists');
   });
 
   it('DynamoDBエラー時は500を返す', async () => {
@@ -53,8 +69,8 @@ describe('create-project handler', () => {
       body: JSON.stringify({
         title: '重複プロジェクト',
         summary: '重複テスト',
-        techStack: ['Node.js']
-      })
+        techStack: ['Node.js'],
+      }),
     };
 
     const result = await createProject(event);
@@ -67,7 +83,7 @@ describe('create-project handler', () => {
     const event = {
       body: JSON.stringify({
         title: '必須項目不足',
-      })
+      }),
     };
 
     const result = await createProject(event);
