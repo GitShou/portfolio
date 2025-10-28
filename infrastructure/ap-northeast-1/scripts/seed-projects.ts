@@ -1,5 +1,5 @@
-import type { Project } from "../data/ProjectData";
-import { PROJECTS_DATA } from "../data/ProjectData"; // ESM export
+import type { Project } from "./ProjectData";
+import { PROJECTS_DATA } from "./ProjectData"; // ESM export
 
 const baseUrl = process.env.PROJECTS_API_BASE_URL;
 
@@ -32,7 +32,7 @@ async function fetchExistingProjects(): Promise<unknown[]> {
   if (!response.ok) {
     const message = await response.text();
     throw new Error(
-      `Failed to fetch projects. Status: ${response.status}. Body: ${message}`
+      `Failed to fetch projects from ${projectsEndpoint}. Status: ${response.status}. Body: ${message}`
     );
   }
 
@@ -52,7 +52,7 @@ async function createProjectViaApi(payload: CreateProjectPayload): Promise<void>
   if (!response.ok) {
     const message = await response.text();
     throw new Error(
-      `Failed to create project ${payload.id}. Status: ${response.status}. Body: ${message}`
+      `Failed to create project ${payload.id} via ${projectsEndpoint}. Status: ${response.status}. Body: ${message}`
     );
   }
 }

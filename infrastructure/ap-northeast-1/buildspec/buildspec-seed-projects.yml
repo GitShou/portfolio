@@ -12,7 +12,7 @@ phases:
       nodejs: 18
     commands:
       - echo "Installing TypeScript compiler"
-      - npm install --no-save typescript
+      - npm install --no-save typescript @types/node
   build:
     commands:
       - echo "Validating environment variables"
@@ -22,9 +22,10 @@ phases:
           exit 1
         fi
       - echo "Compiling TypeScript sources for seeding"
-      - npx tsc --project tsconfig.seed.json
+      - ls -la
+      - npx tsc --project ./tsconfig.seed.json
       - echo "Seeding projects via API if the table is empty"
-      - node dist/scripts/seed-projects.js
+      - node dist/seed-projects.js
 
 artifacts:
   files:
