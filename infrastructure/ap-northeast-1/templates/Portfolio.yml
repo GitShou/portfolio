@@ -161,9 +161,13 @@ Resources:
                 Action:
                   - dynamodb:GetItem
                   - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
                   - dynamodb:UpdateItem
                   - dynamodb:Scan
-                Resource: !GetAtt ProjectTable.Arn
+                Resource:
+                  - !GetAtt ProjectTable.Arn
+                  - !Sub "${ProjectTable.Arn}/index/*"
       Tags:
         - Key: project
           Value: !Ref ProjectName
@@ -252,6 +256,7 @@ Resources:
     Properties:
       CodeUri: ../Lambda/src/get-projects/ #テンプレートからの相対パス
       Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         GetProjects:
           Type: Api
@@ -265,6 +270,7 @@ Resources:
     Properties:
       CodeUri: ../Lambda/src/create-project/
       Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         CreateProject:
           Type: Api
@@ -278,6 +284,7 @@ Resources:
     Properties:
       CodeUri: ../Lambda/src/update-project/
       Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         UpdateProject:
           Type: Api
@@ -291,6 +298,7 @@ Resources:
     Properties:
       CodeUri: ../Lambda/src/delete-project/
       Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Events:
         DeleteProject:
           Type: Api

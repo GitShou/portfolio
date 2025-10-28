@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const buildDocumentClient = () =>
   DynamoDBDocumentClient.from(
-    new DynamoDBClient({ region: process.env.REGION }),
+    new DynamoDBClient({ region: process.env.AWS_REGION ?? process.env.AWS_DEFAULT_REGION }),
     {
       marshallOptions: {
         removeUndefinedValues: true,
