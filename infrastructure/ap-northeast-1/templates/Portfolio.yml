@@ -37,7 +37,6 @@ Resources:
 
   ProjectTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain  # テーブル構造に変化が生じても旧バージョンは残す
     Properties:
       TableName: !Sub "${ProjectName}-projects-v1"
       AttributeDefinitions:
