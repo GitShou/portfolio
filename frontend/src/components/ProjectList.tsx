@@ -1,9 +1,13 @@
-import { PROJECTS_DATA, Project } from "../lib/data";
 import { ProjectTechStack } from "./ProjectTechStack";
+import { Project } from "@/lib/projects/types";
 
-const ProjectList = () => (
+interface ProjectListProps {
+  projects: Project[];
+}
+
+const ProjectList = ({ projects }: ProjectListProps) => (
   <div>
-    {PROJECTS_DATA.map((project: Project) => (
+    {projects.map((project: Project) => (
       <div key={project.id} className="project-card">
         <h2>{project.title}</h2>
         <p>{project.summary}</p>

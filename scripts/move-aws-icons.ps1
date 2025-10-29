@@ -18,7 +18,7 @@ $services = @(
 )
 
 $srcRoot = "references/aws-icons"
-$dstRoot = "public/aws-icons"
+$dstRoot = "frontend/public/aws-icons"
 
 foreach ($service in $services) {
   # サービス名が部分一致し、ファイル名が_64.svgで終わるものを検索

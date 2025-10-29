@@ -21,6 +21,7 @@ phases:
   post_build:
     commands:
       - cd ../../ # go back to root directory
+      - cp frontend/buildspec/buildspec-nextjs.yml frontend/buildspec-nextjs.yml
       - pwd
 
 artifacts:
@@ -32,14 +33,17 @@ artifacts:
       name: SystemArtifact        
 
     WebArtifact:
+      base-directory: frontend
       files:
-        - src/**
-        - public/**
+        - src/**/*
+        - public/**/*
         - package.json
         - package-lock.json
         - next.config.ts
         - tsconfig.json
-        - infrastructure/ap-northeast-1/buildspec/buildspec-nextjs.yml
+        - next-env.d.ts
+        - eslint.config.mjs
+        - buildspec-nextjs.yml
       name: WebArtifact
 
     DataArtifact:

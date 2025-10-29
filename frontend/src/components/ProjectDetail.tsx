@@ -1,14 +1,11 @@
-import { PROJECTS_DATA, Project } from "../lib/data";
+import { Project } from "@/lib/projects/types";
 import { ProjectTechStack } from "./ProjectTechStack";
 
-
-// プロジェクト詳細表示例
 interface ProjectDetailProps {
-  projectId: string;
+  project: Project;
 }
 
-const ProjectDetail = ({ projectId }: ProjectDetailProps) => {
-  const project: Project | undefined = PROJECTS_DATA.find(p => String(p.id) === projectId);
+const ProjectDetail = ({ project }: ProjectDetailProps) => {
   if (!project) return <div>Not found</div>;
 
   return (

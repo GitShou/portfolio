@@ -1,0 +1,41 @@
+version: 0.2
+
+env:
+  parameter-store:
+    PROJECTS_API_BASE_URL: /portfolio5352/api/base-url
+  variables:
+    NEXT_TELEMETRY_DISABLED: "1"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "Installing dependencies for Next.js build"
+      - npm ci
+  build:
+    commands:
+      - echo "Setting environment variables for Next.js build"
+      - echo "PROJECTS_API_BASE_URL is set" # 実際の値はCodeBuild側でマスクされる
+      - echo "Writing .env.production for Next.js"
+      - |-
+        cat <<EOF > .env.production
+        PROJECTS_API_BASE_URL=${PROJECTS_API_BASE_URL}
+        EOF
+      - echo "Running Next.js production build"
+      - npm run build
+      - echo "Exporting static site"
+      - npm run export
+  post_build:
+    commands:
+      - echo "Listing generated static files"
+      - ls -R out
+      - echo "Copying deployment buildspec to artifact root"
+      - cp buildspec/buildspec-s3-sync.yml buildspec-s3-sync.yml
+
+artifacts:
+  files:
+    - 'buildspec-s3-sync.yml'
+    - 'out/**'
+  name: NextJsStaticArtifact
+  discard-paths: no

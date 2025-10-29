@@ -1,10 +1,10 @@
 // src/components/ProjectCard.tsx
 
-import { Heading, Text, Box, VStack, Avatar, Image, SimpleGrid, HStack, Tag } from '@chakra-ui/react';
+import { Heading, Text, Box, Image, SimpleGrid, Tag } from '@chakra-ui/react';
 import { Card, CardHeader, CardBody } from '@chakra-ui/card';
 import Link from "next/link";
 import { Button } from "@chakra-ui/react";
-import { Project } from "../lib/data";
+import { Project } from "@/lib/projects/types";
 
 // プロジェクトのデータ構造を定義します (page.tsxからデータを受け取るための型)
 interface ProjectProps {

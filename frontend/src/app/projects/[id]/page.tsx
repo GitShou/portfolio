@@ -1,14 +1,17 @@
-import { PROJECTS_DATA, Project } from "@/lib/data";
 import { notFound } from "next/navigation";
 import {
   Container, Box, Heading, Text, HStack, Tag, VStack, SimpleGrid, Image, Divider, UnorderedList, ListItem, GridItem
 } from "@chakra-ui/react";
+import { fetchProjectById, fetchProjects } from "@/lib/projects/api";
+import { Project } from "@/lib/projects/types";
+
+export const dynamicParams = false;
 
 
 // 静的エクスポート用: 全プロジェクトIDを返す（DynamoDB/API化も容易に対応可能）
 export async function generateStaticParams() {
-  // TODO: DynamoDB移行後はAPI経由でID一覧を取得するように変更
-  return PROJECTS_DATA.map((project) => ({ id: String(project.id) }));
+  const projects = await fetchProjects();
+  return projects.map((project) => ({ id: String(project.id) }));
 }
 
 
@@ -16,7 +19,7 @@ export async function generateStaticParams() {
 export default async function ProjectDetailPage(props: any) {
   const { params } = props;
   const { id } = params;
-  const project: Project | undefined = PROJECTS_DATA.find((p) => String(p.id) === id);
+  const project: Project | null = await fetchProjectById(id);
   if (!project || !project.detail) return notFound();
   const { sections, role, tasks, features, architectureUrl, improvements } = project.detail;
 
