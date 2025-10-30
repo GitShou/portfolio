@@ -28,12 +28,15 @@ phases:
       - CI=1 npm run test:e2e
       - echo "Running Next.js production build"
       - npm run build
-      - echo "Exporting static site"
-      - npm run export
   post_build:
     commands:
       - echo "Listing generated static files"
-      - ls -R out
+      - |
+        if [ -d out ]; then
+          ls -R out
+        else
+          echo "out directory not generated (previous steps failed)"
+        fi
       - echo "Copying deployment buildspec to artifact root"
       - cp buildspec/buildspec-s3-sync.yml buildspec-s3-sync.yml
 
