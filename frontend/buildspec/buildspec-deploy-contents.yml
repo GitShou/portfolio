@@ -1,0 +1,40 @@
+version: 0.2
+
+env:
+  parameter-store:
+    DEPLOY_S3_BUCKET: /portfolio5352/s3/static-site-bucket-name
+    CLOUDFRONT_DISTRIBUTION_ID: /portfolio5352/cloudfront/distribution-id
+
+phases:
+  install:
+    commands:
+      - echo "Preparing to deploy static artifacts"
+      - |
+        if [ -z "$DEPLOY_S3_BUCKET" ]; then
+          echo "DEPLOY_S3_BUCKET environment variable is required." >&2
+          exit 1
+        fi
+      - |
+        if [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
+          echo "CLOUDFRONT_DISTRIBUTION_ID environment variable is required." >&2
+          exit 1
+        fi
+      - |
+        if [ ! -d "out" ]; then
+          echo "Expected static output directory 'out' was not found in artifact." >&2
+          exit 1
+        fi
+  build:
+    commands:
+      - echo "No build step required - using provided artifact"
+  post_build:
+    commands:
+      - echo "Syncing static output to s3://${DEPLOY_S3_BUCKET}"
+      - aws s3 sync out/ "s3://${DEPLOY_S3_BUCKET}" --delete
+      - echo "Creating CloudFront invalidation for distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
+      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: out

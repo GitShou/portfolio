@@ -99,6 +99,26 @@ Resources:
       Tags:
         project: !Ref ProjectName
 
+  StaticSiteBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/s3/static-site-bucket-name"
+      Type: String
+      Value: !Ref StaticSiteBucket
+      Description: !Sub "${ProjectName} static site S3 bucket name"
+      Tags:
+        project: !Ref ProjectName
+
+  CloudFrontDistributionIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/cloudfront/distribution-id"
+      Type: String
+      Value: !Ref CloudFrontDistribution
+      Description: !Sub "${ProjectName} CloudFront distribution ID"
+      Tags:
+        project: !Ref ProjectName
+
   ApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:

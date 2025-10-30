@@ -38,14 +38,14 @@ phases:
           echo "out directory not generated (previous steps failed)"
         fi
       - echo "Copying deployment buildspec to artifact root"
-      - cp buildspec/buildspec-s3-sync.yml buildspec-s3-sync.yml
+      - cp buildspec/buildspec-deploy-contents.yml buildspec-deploy-contents.yml
 
 artifacts:
   secondary-artifacts:
     WebContents:
-      base-directory: out
       files:
-        - './**/*'
+        - 'buildspec-deploy-contents.yml'
+        - 'out/**/*'
       name: WebContents
       discard-paths: no
       
