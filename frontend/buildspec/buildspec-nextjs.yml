@@ -43,9 +43,9 @@ phases:
 artifacts:
   secondary-artifacts:
     WebContents:
+      base-directory: out
       files:
-        - 'buildspec-s3-sync.yml'
-        - 'out/**'
+        - './**/*'
       name: WebContents
       discard-paths: no
       
