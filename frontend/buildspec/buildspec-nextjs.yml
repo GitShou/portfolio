@@ -14,7 +14,7 @@ phases:
       - echo "Installing dependencies for Next.js build"
       - npm ci
       - echo "Installing Playwright browsers"
-  - npx playwright install chromium
+      - npx playwright install chromium
   build:
     commands:
       - echo "Setting environment variables for Next.js build"
