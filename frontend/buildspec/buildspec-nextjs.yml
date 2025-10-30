@@ -13,6 +13,8 @@ phases:
     commands:
       - echo "Installing dependencies for Next.js build"
       - npm ci
+      - echo "Installing Playwright browsers"
+      - npx playwright install --with-deps chromium
   build:
     commands:
       - echo "Setting environment variables for Next.js build"
@@ -22,6 +24,8 @@ phases:
         cat <<EOF > .env.production
         PROJECTS_API_BASE_URL=${PROJECTS_API_BASE_URL}
         EOF
+      - echo "Running Playwright end-to-end smoke tests"
+      - CI=1 npm run test:e2e
       - echo "Running Next.js production build"
       - npm run build
       - echo "Exporting static site"
@@ -34,8 +38,16 @@ phases:
       - cp buildspec/buildspec-s3-sync.yml buildspec-s3-sync.yml
 
 artifacts:
-  files:
-    - 'buildspec-s3-sync.yml'
-    - 'out/**'
-  name: NextJsStaticArtifact
-  discard-paths: no
+  secondary-artifacts:
+    WebContents:
+      files:
+        - 'buildspec-s3-sync.yml'
+        - 'out/**'
+      name: WebContents
+      discard-paths: no
+      
+    TestResults:
+      files:
+        - 'test-results/**'
+      name: NextJsPlaywrightResults
+      discard-paths: no

@@ -1,0 +1,128 @@
+{
+  "projects": [
+    {
+      "id": "portfolio-site",
+      "title": "クラウドネイティブ技術ポートフォリオ",
+      "summary": "Next.js と AWS サーバレスを組み合わせたポートフォリオサイト。CI/CD パイプラインまで一貫して構築。",
+      "status": "production",
+      "techStack": [
+        {
+          "name": "Next.js",
+          "icon": "/aws-icons/Arch_Front-End-Web-Mobile/Arch-App-Development-dark-bg.svg"
+        },
+        {
+          "name": "TypeScript"
+        },
+        {
+          "name": "Chakra UI"
+        },
+        {
+          "name": "AWS Lambda",
+          "icon": "/aws-icons/Arch_Compute/Arch_AWS-Lambda_64.svg"
+        },
+        {
+          "name": "API Gateway",
+          "icon": "/aws-icons/Arch_App-Integration/Arch_Amazon-API-Gateway_64.svg"
+        },
+        {
+          "name": "DynamoDB",
+          "icon": "/aws-icons/Arch_Database/Arch_Amazon-DynamoDB_64.svg"
+        }
+      ],
+      "links": {
+        "repository": "https://github.com/GitShou/portfolio",
+        "demo": "https://portfolio.example.com"
+      },
+      "detail": {
+        "role": "フルスタックエンジニア",
+        "tasks": [
+          "Next.js と Chakra UI を用いたフロントエンド実装",
+          "API Gateway + Lambda + DynamoDB を組み合わせたサーバレス API 設計",
+          "Infrastructure as Code (CloudFormation) によるテンプレート管理",
+          "CodePipeline / CodeBuild / CodeDeploy を用いた CI/CD パイプライン構築"
+        ],
+        "features": [
+          "全ページ静的エクスポート + CloudFront/S3 配信",
+          "API 経由で DynamoDB のプロジェクトデータを動的取得",
+          "WAF などセキュリティレイヤを含めた本番運用設計",
+          "アーキテクチャ図・職務経歴資料などを統合したポートフォリオ"
+        ],
+        "sections": [
+          {
+            "title": "プロジェクト概要",
+            "body": "求職活動向けに、自身の技術力と設計力を示せるポートフォリオサイトを構築。 Next.js の App Router と Chakra UI によるモダンな UI、AWS サーバレスによるスケーラブルなバックエンドを組み合わせた。"
+          },
+          {
+            "title": "アーキテクチャ",
+            "body": "静的サイト配信 + API Gateway / Lambda / DynamoDB の三層構成。CloudFormation/SAM テンプレートで IaC を一元管理し、CodePipeline でデプロイを自動化。"
+          }
+        ],
+        "improvements": [
+          {
+            "title": "IaC による環境差分の排除",
+            "description": "CloudFormation テンプレートを細分化し、ステージごとの設定をパラメータ化。手動作業を排除し、デプロイ再現性を高めた。"
+          },
+          {
+            "title": "CodeBuild ログ解析と権限最適化",
+            "description": "CodeBuild の IAM 権限とログ設定をチューニングし、ビルド失敗時のトラブルシューティングを容易にした。"
+          }
+        ],
+        "architectureUrl": "/references/アーキテクチャ/portfolio-architecture.png"
+      }
+    },
+    {
+      "id": "cloudwatch-automation",
+      "title": "CloudWatch ログ運用の自動化",
+      "summary": "CloudWatch Logs の可観測性向上を目的に、アラート自動生成とダッシュボード整備を行った案件。SAM と CodePipeline で自動デプロイ化。",
+      "status": "production",
+      "techStack": [
+        {
+          "name": "AWS SAM"
+        },
+        {
+          "name": "AWS Lambda"
+        },
+        {
+          "name": "Amazon SNS"
+        },
+        {
+          "name": "Amazon CloudWatch"
+        }
+      ],
+      "links": {
+        "repository": "https://github.com/GitShou/cloudwatch-automation"
+      },
+      "detail": {
+        "role": "サーバレスアーキテクト",
+        "tasks": [
+          "CloudWatch Logs Insights を活用したログ可視化設計",
+          "Lambda / SNS / EventBridge を連携させたアラート通知",
+          "SAM テンプレートによる環境横展開",
+          "CodePipeline を用いた自動デプロイ構築"
+        ],
+        "features": [
+          "Slack 連携による運用通知の自動化",
+          "複数アカウントに跨るログ収集・分析パターン",
+          "観測指標の標準化とドキュメント化",
+          "テンプレート化によるオンボーディングコスト削減"
+        ],
+        "sections": [
+          {
+            "title": "課題",
+            "body": "既存環境ではログのサイロ化が進み、アラートの検知漏れが発生していた。運用担当が個別に手作業で設定していたため、品質が統一されていなかった。"
+          },
+          {
+            "title": "解決策",
+            "body": "CloudWatch Logs Insights でテンプレート化したクエリを提供し、ダッシュボードの共通化を図った。さらに Lambda + SNS 通知でアラートを自動化し、見逃しを防止。"
+          }
+        ],
+        "improvements": [
+          {
+            "title": "アラート設定の標準化",
+            "description": "EventBridge ルールをコード化し、各チームが同じ基準でアラートを設定できるようにした。"
+          }
+        ]
+      }
+    }
+  ]
+}
