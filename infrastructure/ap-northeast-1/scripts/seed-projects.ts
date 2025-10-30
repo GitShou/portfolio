@@ -1,5 +1,5 @@
-import type { Project } from "../data/ProjectData";
-import { PROJECTS_DATA } from "../data/ProjectData"; // ESM export
+import type { Project } from "./ProjectData";
+import { PROJECTS_DATA } from "./ProjectData"; // ESM export
 
 const baseUrl = process.env.PROJECTS_API_BASE_URL;
 
