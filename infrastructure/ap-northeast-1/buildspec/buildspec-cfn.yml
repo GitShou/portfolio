@@ -35,15 +35,7 @@ artifacts:
     WebArtifact:
       base-directory: frontend
       files:
-        - src/**/*
-        - public/**/*
-        - package.json
-        - package-lock.json
-        - next.config.ts
-        - tsconfig.json
-        - next-env.d.ts
-        - eslint.config.mjs
-        - buildspec-nextjs.yml
+        - '**/*'
       name: WebArtifact
 
     DataArtifact:
