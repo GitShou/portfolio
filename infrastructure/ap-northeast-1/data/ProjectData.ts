@@ -28,6 +28,89 @@ export type Project = {
 export const PROJECTS_DATA: Project[] = [
   {
     id: 1,
+    title: "技術ポートフォリオ Web サイト構築",
+    summary:
+      "Next.js(App Router) + Chakra UI で実装した技術ポートフォリオ。Lambda/API Gateway/DynamoDB を用いたサーバレス API と連携し、CI/CD・IaC を含むエンドツーエンドの仕組みを整備。",
+    techStack: [
+      { name: "Next.js", icon: "" },
+      { name: "TypeScript", icon: "" },
+      { name: "Chakra UI", icon: "" },
+      { name: "AWS API Gateway", icon: "/aws-icons/api-gateway_64.svg" },
+      { name: "AWS Lambda", icon: "/aws-icons/lambda_64.svg" },
+      { name: "Amazon DynamoDB", icon: "/aws-icons/dynamodb_64.svg" },
+      { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
+      { name: "Amazon S3", icon: "/aws-icons/s3_64.svg" },
+      { name: "AWS CodePipeline", icon: "/aws-icons/codebuild_64.svg" }
+    ],
+    detail: {
+      type: "portfolio",
+      role: "フルスタックエンジニア / アーキテクト",
+      tasks: [
+        "Next.js 15 App Router + Chakra UI による UI 設計・実装",
+        "API Gateway + Lambda + DynamoDB によるプロジェクトデータ API 設計",
+        "CodePipeline / CodeBuild / CloudFormation による CI/CD パイプライン構築",
+        "Playwright による E2E テスト自動化とビルドパイプラインへの組み込み"
+      ],
+      features: [
+        "API ベースのプロジェクトデータ取得とローカルモックの両立",
+        "Next.js output: export による静的サイト最適化と CloudFront 配信",
+        "CodeBuild 上での Playwright エンドツーエンドテストと成果物保存",
+        "Infrastructure as Code (CloudFormation) によるフロント/バックエンド統合管理"
+      ],
+      sections: [
+        {
+          heading: "プロジェクト概要",
+          body:
+            "求職・案件獲得活動向けに、技術力・アーキテクト力を示すためのポートフォリオサイトを新規構築。Next.js 15 の App Router を採用し、フロントエンドからバックエンド、デプロイパイプラインまで一貫して設計・実装。"
+        },
+        {
+          heading: "システム構成とアーキテクチャ",
+          list: [
+            "Next.js(App Router) を output: export で静的書き出しし、CloudFront + S3 で配信",
+            "API Gateway + Lambda + DynamoDB を組み合わせたプロジェクトデータ API",
+            "CodePipeline で CloudFormation テンプレートとフロントエンド資産を同時にデプロイ",
+            "WAF, CloudFront, IAM など AWS 標準サービスを活用したセキュアな公開"
+          ],
+          image: "/references/アーキテクチャ/portfolio-architecture.png"
+        },
+        {
+          heading: "開発プロセスと品質向上",
+          list: [
+            "Playwright + json-server による E2E テストをローカルと CI の両方で自動実行",
+            "CodeBuild でのマルチアーティファクト出力 (静的サイト + テスト結果)",
+            "環境変数と .env 管理により、本番 API とローカルモックを切り替え",
+            "GitHub Actions ではなく AWS CodePipeline を採用し、AWS サービスで完結"
+          ]
+        },
+        {
+          heading: "成果・学び",
+          list: [
+            "フロント/バック/CI/CD を横断したフルスタックな設計力の可視化",
+            "Next.js 15 の最新仕様 (app, static export, eslint 連携) へのキャッチアップ",
+            "CI 上でのブラウザ自動テスト導入による品質担保体制の整備",
+            "IaC を通じた再現性の高いクラウド環境構築"
+          ],
+          body:
+            "ポートフォリオ公開後は、CloudFront からの配信確認や CodePipeline での自動更新がスムーズに実行できるようになり、継続的な改善・機能追加の基盤が整った。"
+        }
+      ],
+      improvements: [
+        {
+          title: "Playwright テストの CI 組み込み",
+          description:
+            "CodeBuild でのブラウザ自動テスト実行と結果アーティファクト化を行い、静的サイトのリグレッションを検知できる仕組みを導入。"
+        },
+        {
+          title: "API 前提のデータ取得フロー",
+          description:
+            "本番は API 経由のみ許可し、ローカルではモック API を利用できる設計とすることで、現実の運用に近い開発体験を実現。"
+        }
+      ],
+      architectureUrl: "/references/アーキテクチャ/portfolio-architecture.png"
+    }
+  },
+  {
+    id: 2,
     title: "AWSサーバーレス研修管理システム移行",
     summary: "オンプレミスの研修管理システムをAWSサーバーレス（API Gateway, Lambda, DynamoDB等）へ移行。Google認証連携やREST API化も担当。リーダーとして設計・構築・運用を主導。",
     techStack: [
@@ -89,7 +172,7 @@ export const PROJECTS_DATA: Project[] = [
     // --- ここまで詳細ページ用の拡張情報 ---
   },
   {
-    id: 2,
+    id: 3,
     title: "クラウドネイティブなTODO管理システム開発ハンズオン設計・講師実績",
     summary: "AWSサーバーレスアーキテクチャを2時間で体得できるハンズオン研修を設計・講師として実施。S3/CloudFront/API Gateway/Lambda/DynamoDBを組み合わせた実践的なクラウドネイティブ開発を体系化し、延べ200名以上に登壇。",
     techStack: [
@@ -140,7 +223,7 @@ export const PROJECTS_DATA: Project[] = [
     }
   },
   {
-    id: 3,
+    id: 4,
     title: "AWSリソース棚卸・コスト最適化支援",
     summary: "数千リソースのAWS環境をTag Editor等で棚卸し、コスト最適化・タグ設計・運用改善を実施。フリーランスとして単独で担当。",
     techStack: [

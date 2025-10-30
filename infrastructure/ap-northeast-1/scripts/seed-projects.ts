@@ -1,5 +1,5 @@
-import type { Project } from "./ProjectData";
-import { PROJECTS_DATA } from "./ProjectData"; // ESM export
+import type { Project } from "../data/ProjectData";
+import { PROJECTS_DATA } from "../data/ProjectData"; // ESM export
 
 const baseUrl = process.env.PROJECTS_API_BASE_URL;
 
@@ -21,7 +21,15 @@ type CreateProjectPayload = {
   };
 };
 
-async function fetchExistingProjects(): Promise<unknown[]> {
+type ExistingProject = {
+  id: Project["id"];
+  metadata?: {
+    status?: string;
+    order?: number | null;
+  };
+};
+
+async function fetchExistingProjects(): Promise<ExistingProject[]> {
   const response = await fetch(projectsEndpoint, {
     method: "GET",
     headers: {
@@ -36,7 +44,7 @@ async function fetchExistingProjects(): Promise<unknown[]> {
     );
   }
 
-  const body = (await response.json()) as { projects?: unknown[] };
+  const body = (await response.json()) as { projects?: ExistingProject[] };
   return body.projects ?? [];
 }
 
@@ -57,17 +65,36 @@ async function createProjectViaApi(payload: CreateProjectPayload): Promise<void>
   }
 }
 
+async function updateProjectViaApi(
+  id: Project["id"],
+  payload: CreateProjectPayload
+): Promise<void> {
+  const endpoint = `${projectsEndpoint}/${encodeURIComponent(String(id))}`;
+  const response = await fetch(endpoint, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(
+      `Failed to update project ${payload.id} via ${endpoint}. Status: ${response.status}. Body: ${message}`
+    );
+  }
+}
+
 async function seedProjects(): Promise<void> {
   const existingProjects = await fetchExistingProjects();
-  if (existingProjects.length > 0) {
-    console.log(
-      `API already reports ${existingProjects.length} projects. Skipping seeding process.`
-    );
-    return;
+  const existingProjectsById = new Map<string, ExistingProject>();
+  for (const project of existingProjects) {
+    existingProjectsById.set(String(project.id), project);
   }
 
   console.log(
-    `No projects found via API. Seeding ${PROJECTS_DATA.length} project items.`
+    `Upserting ${PROJECTS_DATA.length} project items (existing: ${existingProjects.length}).`
   );
 
   for (const [index, project] of PROJECTS_DATA.entries()) {
@@ -79,12 +106,19 @@ async function seedProjects(): Promise<void> {
       detail: project.detail,
       metadata: {
         order: index + 1,
-        status: "PUBLISHED",
+        status: existingProjectsById.get(String(project.id))?.metadata?.status ?? "PUBLISHED",
       },
     };
 
-    await createProjectViaApi(payload);
-    console.log(`Seeded project ${project.id}: ${project.title}`);
+    const existingProject = existingProjectsById.get(String(project.id));
+
+    if (existingProject) {
+      await updateProjectViaApi(project.id, payload);
+      console.log(`Updated project ${project.id}: ${project.title}`);
+    } else {
+      await createProjectViaApi(payload);
+      console.log(`Created project ${project.id}: ${project.title}`);
+    }
   }
 
   console.log("All project items have been seeded successfully via API.");
