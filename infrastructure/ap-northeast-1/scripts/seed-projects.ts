@@ -1,5 +1,9 @@
-import type { Project } from "./ProjectData";
-import { PROJECTS_DATA } from "./ProjectData"; // ESM export
+import type { Project } from "../data/ProjectData";
+import { PROJECTS_DATA } from "../data/ProjectData"; // ESM export
+import { SignatureV4 } from "@aws-sdk/signature-v4";
+import { Sha256 } from "@aws-crypto/sha256-js";
+import { HttpRequest } from "@aws-sdk/protocol-http";
+import { defaultProvider } from "@aws-sdk/credential-provider-node";
 
 const baseUrl = process.env.PROJECTS_API_BASE_URL;
 
@@ -8,6 +12,72 @@ if (!baseUrl) {
 }
 
 const projectsEndpoint = `${baseUrl.replace(/\/$/, "")}/projects`;
+const projectsEndpointUrl = new URL(projectsEndpoint);
+const shouldSignRequests = projectsEndpointUrl.hostname.includes(".execute-api.");
+
+function extractRegionFromHostname(hostname: string): string {
+  const parts = hostname.split(".");
+  const executeApiIndex = parts.indexOf("execute-api");
+
+  if (executeApiIndex === -1 || executeApiIndex + 1 >= parts.length) {
+    throw new Error(
+      `Unable to parse AWS region from API hostname: ${hostname}. Expected '<apiId>.execute-api.<region>.amazonaws.com'.`
+    );
+  }
+
+  return parts[executeApiIndex + 1];
+}
+
+const signer = shouldSignRequests
+  ? new SignatureV4({
+      credentials: defaultProvider(),
+      region: extractRegionFromHostname(projectsEndpointUrl.hostname),
+      service: "execute-api",
+      sha256: Sha256,
+    })
+  : null;
+
+async function signedFetch(
+  url: string,
+  init: { method: string; body?: string; headers?: Record<string, string> }
+): Promise<Response> {
+  if (!shouldSignRequests || !signer) {
+    return fetch(url, {
+      method: init.method,
+      headers: init.headers,
+      body: init.body,
+    });
+  }
+
+  const targetUrl = new URL(url);
+
+  const request = new HttpRequest({
+    protocol: targetUrl.protocol,
+    hostname: targetUrl.hostname,
+    port: targetUrl.port ? Number(targetUrl.port) : undefined,
+    method: init.method,
+    path: `${targetUrl.pathname}${targetUrl.search}`,
+    headers: {
+      host: targetUrl.host,
+      ...(init.headers ?? {}),
+    },
+    body: init.body,
+  });
+
+  const signed = await signer.sign(request);
+  const headers: Record<string, string> = {};
+  for (const [key, value] of Object.entries(signed.headers)) {
+    if (typeof value === "string") {
+      headers[key] = value;
+    }
+  }
+
+  return fetch(targetUrl, {
+    method: init.method,
+    headers,
+    body: init.body,
+  });
+}
 
 type CreateProjectPayload = {
   id: Project["id"];
@@ -30,7 +100,7 @@ type ExistingProject = {
 };
 
 async function fetchExistingProjects(): Promise<ExistingProject[]> {
-  const response = await fetch(projectsEndpoint, {
+  const response = await signedFetch(projectsEndpoint, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -49,7 +119,7 @@ async function fetchExistingProjects(): Promise<ExistingProject[]> {
 }
 
 async function createProjectViaApi(payload: CreateProjectPayload): Promise<void> {
-  const response = await fetch(projectsEndpoint, {
+  const response = await signedFetch(projectsEndpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -70,7 +140,7 @@ async function updateProjectViaApi(
   payload: CreateProjectPayload
 ): Promise<void> {
   const endpoint = `${projectsEndpoint}/${encodeURIComponent(String(id))}`;
-  const response = await fetch(endpoint, {
+  const response = await signedFetch(endpoint, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

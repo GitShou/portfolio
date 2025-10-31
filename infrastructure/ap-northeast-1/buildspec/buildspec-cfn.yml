@@ -44,8 +44,10 @@ artifacts:
         - 'buildspec/buildspec-seed-projects.yml'
         - 'scripts/tsconfig.seed.json'
         - 'scripts/seed-projects.ts'
+        - 'scripts/package.json'
+        - 'scripts/package-lock.json'
         - 'data/ProjectData.ts'
-      discard-paths: yes
+      discard-paths: no
       name: DataArtifact
 
     CleanupCfnArtifact:
