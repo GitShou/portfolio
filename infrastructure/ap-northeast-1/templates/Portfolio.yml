@@ -15,6 +15,10 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
     Default: "/portfolio/waf/arn"
+  ParameterWriterFunctionArnParameter:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: SSMパラメータストアに格納されたParameterWriterFunctionのARN
+    Default: "/portfolio/SSM/parameter-writer/function-arn"
 
 Globals:
   Function:
@@ -86,36 +90,6 @@ Resources:
       Type: String
       Value: !Ref ProjectTable
       Description: !Sub "${ProjectName} DynamoDB projects table name"
-      Tags:
-        project: !Ref ProjectName
-
-  ProjectApiBaseUrlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/api/base-url"
-      Type: String
-      Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
-      Description: !Sub "${ProjectName} projects API base URL"
-      Tags:
-        project: !Ref ProjectName
-
-  StaticSiteBucketNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/s3/static-site-bucket-name"
-      Type: String
-      Value: !Ref StaticSiteBucket
-      Description: !Sub "${ProjectName} static site S3 bucket name"
-      Tags:
-        project: !Ref ProjectName
-
-  CloudFrontDistributionIdParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/cloudfront/distribution-id"
-      Type: String
-      Value: !Ref CloudFrontDistribution
-      Description: !Sub "${ProjectName} CloudFront distribution ID"
       Tags:
         project: !Ref ProjectName
 
@@ -279,6 +253,44 @@ Resources:
           MetricsEnabled: true
       Tags:
         project: !Ref ProjectName
+
+  ParameterWriterWrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-parameter-writer-wrapper"
+      CodeUri: ../Lambda/src/parameter-writer-wrapper/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      MemorySize: 128
+      Timeout: 30
+      Environment:
+        Variables:
+          PARAMETER_WRITER_FUNCTION_ARN: !Ref ParameterWriterFunctionArnParameter
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !Ref ParameterWriterFunctionArnParameter
+      Tags:
+        project: !Ref ProjectName
+
+  ParameterWriterCustomResource:
+    Type: Custom::ParameterWriter
+    Properties:
+      ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
+      Parameters:
+        - name: !Sub "/${ProjectName}/api/base-url"
+          value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
+          type: String
+        - name: !Sub "/${ProjectName}/s3/static-site-bucket-name"
+          value: !Ref StaticSiteBucket
+          type: String
+        - name: !Sub "/${ProjectName}/cloudfront/distribution-id"
+          value: !Ref CloudFrontDistribution
+          type: String
+    DependsOn:
+      - ProjectApiStage
 
   GetProjectsFunction:
     Type: AWS::Serverless::Function
