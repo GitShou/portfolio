@@ -15,8 +15,8 @@ phases:
     commands:
       - cd ../ # go back to infrastructure/ap-northeast-1
       - pwd
-      - aws cloudformation package --template-file templates/Portfolio.yml --output-template-file templates/buildedTemplate.yml --s3-bucket portfolio-build-bucket-5352 --force-upload
-      - ls -la
+      - aws cloudformation package --template-file templates/portfolio-backend.yml --output-template-file templates/portfolio-backend.packaged.yml --s3-bucket portfolio-build-bucket-5352 --force-upload
+      - ls -la templates
 
   post_build:
     commands:
@@ -29,7 +29,8 @@ artifacts:
     SystemArtifact:
       base-directory: infrastructure/ap-northeast-1/templates
       files:
-        - buildedTemplate.yml
+        - portfolio-frontend.yml
+        - portfolio-backend.packaged.yml
       name: SystemArtifact        
 
     WebArtifact:

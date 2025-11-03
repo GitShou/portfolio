@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ポートフォリオサイトのフロントエンド（S3/CloudFront/WAF）のSAMテンプレート
+
+Parameters:
+  ProjectName:
+    Type: String
+    Description: プロジェクト名（リソース名のプレフィックス）
+    Default: "portfolio5352"
+  WebAclArnParameter:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
+    Default: "/portfolio/waf/arn"
+
+Resources:
+  StaticSiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-static-site"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  CloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub "${ProjectName} static site OAI"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        WebACLId: !Ref WebAclArnParameter
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt StaticSiteBucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  StaticSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticSiteBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOAI}"
+            Action: "s3:GetObject"
+            Resource: !Sub "${StaticSiteBucket.Arn}/*"
+
+  StaticSiteBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/s3/static-site-bucket-name"
+      Type: String
+      Value: !Ref StaticSiteBucket
+      Description: !Sub "${ProjectName} static site bucket name"
+      Tags:
+        project: !Ref ProjectName
+
+  CloudFrontDistributionIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/cloudfront/distribution-id"
+      Type: String
+      Value: !Ref CloudFrontDistribution
+      Description: !Sub "${ProjectName} CloudFront distribution id"
+      Tags:
+        project: !Ref ProjectName
+
+Outputs:
+  StaticSiteBucketName:
+    Value: !Ref StaticSiteBucket
+    Description: 静的サイト用S3バケット名
+  CloudFrontDistributionId:
+    Value: !Ref CloudFrontDistribution
+    Description: CloudFrontディストリビューションID
+  CloudFrontDistributionDomainName:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Description: CloudFrontディストリビューションのドメイン名

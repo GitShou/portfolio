@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 基本的なAWSサーバーレス構成（S3, CloudFront, WAF, API Gateway, Lambda, DynamoDB, VPC, IAM等）のSAMテンプレート雛形
+Description: ポートフォリオサイトのバックエンド（API/Lambda/DynamoDB/SSM）のSAMテンプレート
 
 Parameters:
   ProjectName:
@@ -11,10 +11,6 @@ Parameters:
     Type: String
     Description: API Gateway のステージ名
     Default: "prod"
-  WebAclArnParameter:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
-    Default: "/portfolio/waf/arn"
   ParameterWriterFunctionArnParameter:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: SSMパラメータストアに格納されたParameterWriterFunctionのARN
@@ -31,14 +27,6 @@ Globals:
         PROJECT_TABLE_NAME: !Ref ProjectTable
 
 Resources:
-  StaticSiteBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${ProjectName}-static-site"
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-
   ProjectTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -176,59 +164,6 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
-  CloudFrontOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub "${ProjectName} static site OAI"
-
-  CloudFrontDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        DefaultRootObject: index.html
-        WebACLId: !Ref WebAclArnParameter
-        Origins:
-          - Id: S3Origin
-            DomainName: !GetAtt StaticSiteBucket.DomainName
-            S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
-        DefaultCacheBehavior:
-          TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods:
-            - GET
-            - HEAD
-            - OPTIONS
-          CachedMethods:
-            - GET
-            - HEAD
-          Compress: true
-          ForwardedValues:
-            QueryString: false
-            Cookies:
-              Forward: none
-        PriceClass: PriceClass_100
-        ViewerCertificate:
-          CloudFrontDefaultCertificate: true
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-
-  StaticSiteBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref StaticSiteBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CloudFrontOAI}"
-            Action: "s3:GetObject"
-            Resource: !Sub "${StaticSiteBucket.Arn}/*"
-
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -283,19 +218,11 @@ Resources:
         - name: !Sub "/${ProjectName}/api/base-url"
           value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
           type: String
-        - name: !Sub "/${ProjectName}/s3/static-site-bucket-name"
-          value: !Ref StaticSiteBucket
-          type: String
-        - name: !Sub "/${ProjectName}/cloudfront/distribution-id"
-          value: !Ref CloudFrontDistribution
-          type: String
-    DependsOn:
-      - ProjectApiStage
 
   GetProjectsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../Lambda/src/get-projects/ #テンプレートからの相対パス
+      CodeUri: ../Lambda/src/get-projects/
       Handler: index.handler
       Role: !GetAtt LambdaExecutionRole.Arn
       Events:
@@ -349,18 +276,9 @@ Resources:
             RestApiId: !Ref ProjectApi
 
 Outputs:
-  StaticSiteBucketName:
-    Value: !Ref StaticSiteBucket
-    Description: 静的サイト用S3バケット名
   ApiEndpoint:
     Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
     Description: API Gatewayエンドポイント
   DynamoDBTableName:
     Value: !Ref ProjectTable
     Description: プロジェクト情報用DynamoDBテーブル名
-  CloudFrontDistributionId:
-    Value: !Ref CloudFrontDistribution
-    Description: CloudFrontディストリビューションID
-  CloudFrontDistributionDomainName:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Description: CloudFrontディストリビューションのドメイン名
