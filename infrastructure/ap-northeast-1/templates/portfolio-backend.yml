@@ -216,8 +216,13 @@ Resources:
       ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
       Parameters:
         - name: !Sub "/${ProjectName}/api/base-url"
-          value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
+          valueFrom:
+            type: apiGatewayBaseUrl
+            logicalId: ProjectApi
+            stage: !Ref ApiStageName
           type: String
+    DependsOn:
+      - ProjectApiStage
 
   GetProjectsFunction:
     Type: AWS::Serverless::Function

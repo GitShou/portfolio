@@ -1,4 +1,5 @@
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { CloudFormationClient, DescribeStackResourceCommand } from "@aws-sdk/client-cloudformation";
 
 const TARGET_FUNCTION_ARN = process.env.PARAMETER_WRITER_FUNCTION_ARN;
 
@@ -6,12 +7,13 @@ if (!TARGET_FUNCTION_ARN) {
   throw new Error("PARAMETER_WRITER_FUNCTION_ARN environment variable is required.");
 }
 
-const client = new LambdaClient({});
+const lambdaClient = new LambdaClient({});
+const cloudFormationClient = new CloudFormationClient({});
 
 const textDecoder = new TextDecoder("utf-8");
 
 async function invokeParameterWriter(payload) {
-  const response = await client.send(
+  const response = await lambdaClient.send(
     new InvokeCommand({
       FunctionName: TARGET_FUNCTION_ARN,
       InvocationType: "RequestResponse",
@@ -32,13 +34,85 @@ async function invokeParameterWriter(payload) {
   }
 }
 
-function normalizeParameterSpec(spec, action) {
+const sleep = (milliseconds) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+
+async function describeStackResourceWithRetry(stackId, logicalResourceId, retries = 5, delayMs = 3000) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      const result = await cloudFormationClient.send(
+        new DescribeStackResourceCommand({
+          StackName: stackId,
+          LogicalResourceId: logicalResourceId,
+        })
+      );
+
+      const physicalResourceId = result.StackResourceDetail?.PhysicalResourceId;
+      if (physicalResourceId) {
+        return physicalResourceId;
+      }
+    } catch (error) {
+      lastError = error;
+    }
+
+    await sleep(delayMs);
+  }
+
+  throw lastError ?? new Error(`Failed to resolve physical resource ID for ${logicalResourceId}.`);
+}
+
+async function resolveParameterValue(spec, event) {
+  if (spec.value !== undefined) {
+    return spec.value;
+  }
+
+  if (spec.Value !== undefined) {
+    return spec.Value;
+  }
+
+  const valueFrom = spec.valueFrom ?? spec.ValueFrom;
+
+  if (!valueFrom) {
+    return undefined;
+  }
+
+  const type = valueFrom.type ?? valueFrom.Type;
+
+  switch (type) {
+    case "apiGatewayBaseUrl": {
+      const logicalId = valueFrom.logicalId ?? valueFrom.LogicalId;
+      const stage = valueFrom.stage ?? valueFrom.Stage;
+      const region = valueFrom.region ?? valueFrom.Region ?? process.env.AWS_REGION;
+
+      if (!logicalId) {
+        throw new Error("valueFrom.apiGatewayBaseUrl requires a logicalId.");
+      }
+
+      const stackId = event.StackId;
+      const restApiId = await describeStackResourceWithRetry(stackId, logicalId);
+
+      if (!region) {
+        throw new Error("AWS region is required to resolve apiGatewayBaseUrl.");
+      }
+
+      const stageSuffix = stage ? `/${stage}` : "";
+      return `https://${restApiId}.execute-api.${region}.amazonaws.com${stageSuffix}`;
+    }
+    default:
+      throw new Error(`Unsupported valueFrom.type: ${type}`);
+  }
+}
+
+async function normalizeParameterSpec(spec, action, event) {
   if (!spec) {
     return null;
   }
 
   const name = spec.name ?? spec.Name;
-  const value = spec.value ?? spec.Value;
   const type = spec.type ?? spec.Type;
   const overwrite = spec.overwrite ?? spec.Overwrite;
 
@@ -48,6 +122,12 @@ function normalizeParameterSpec(spec, action) {
 
   if (action === "delete") {
     return { name, action: "delete" };
+  }
+
+  const value = await resolveParameterValue(spec, event);
+
+  if (value === undefined) {
+    throw new Error(`Parameter ${name} requires a value or valueFrom definition.`);
   }
 
   return {
@@ -97,7 +177,14 @@ export const handler = async (event, context) => {
 
     const requestType = event.RequestType ?? "Create";
     const desiredAction = requestType === "Delete" ? "delete" : "put";
-    const payloadParameters = parameters.map((spec) => normalizeParameterSpec(spec, desiredAction));
+    const payloadParameters = [];
+
+    for (const spec of parameters) {
+      const normalized = await normalizeParameterSpec(spec, desiredAction, event);
+      if (normalized) {
+        payloadParameters.push(normalized);
+      }
+    }
 
     const result = await invokeParameterWriter({ parameters: payloadParameters });
 
