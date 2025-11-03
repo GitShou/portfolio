@@ -14,53 +14,39 @@ phases:
       - echo "Preparing CloudFormation stack state for redeploy"
       - |
         set -euo pipefail
-
-        DEFAULT_STACKS=("Portfolio-Stack-frontend" "Portfolio-Stack-backend")
-
-        STACK_NAMES_INPUT="${TARGET_STACK_NAME:-}"
-        if [ -n "$STACK_NAMES_INPUT" ]; then
-          IFS=' ' read -r -a STACK_NAMES <<< "$STACK_NAMES_INPUT"
-        else
-          STACK_NAMES=("${DEFAULT_STACKS[@]}")
+        if [ -z "$TARGET_STACK_NAME" ]; then
+          echo "TARGET_STACK_NAME environment variable must be set" >&2
+          exit 1
         fi
-
-        for STACK_NAME in "${STACK_NAMES[@]}"; do
-          if [ -z "$STACK_NAME" ]; then
-            continue
+        echo "Checking status of stack: $TARGET_STACK_NAME"
+        DESCRIBE_OUTPUT=""
+        if ! DESCRIBE_OUTPUT=$(aws cloudformation describe-stacks --stack-name "$TARGET_STACK_NAME" --output json 2>&1); then
+          if echo "$DESCRIBE_OUTPUT" | grep -qi "does not exist"; then
+            echo "Stack $TARGET_STACK_NAME does not exist. No cleanup required."
+            exit 0
+          else
+            echo "$DESCRIBE_OUTPUT" >&2
+            exit 1
           fi
-
-          echo "Checking status of stack: $STACK_NAME"
-          DESCRIBE_OUTPUT=""
-          if ! DESCRIBE_OUTPUT=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --output json 2>&1); then
-            if echo "$DESCRIBE_OUTPUT" | grep -qi "does not exist"; then
-              echo "Stack $STACK_NAME does not exist. No cleanup required."
-              continue
-            else
-              echo "$DESCRIBE_OUTPUT" >&2
-              exit 1
-            fi
-          fi
-
-          STACK_STATUS=$(echo "$DESCRIBE_OUTPUT" | python -c "import sys,json; data=json.load(sys.stdin); print(data['Stacks'][0]['StackStatus'])")
-          echo "Current stack status: $STACK_STATUS"
-
-          case "$STACK_STATUS" in
-            DELETE_IN_PROGRESS)
-              echo "Deletion already in progress. Waiting for completion..."
-              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
-              ;;
-            ROLLBACK_COMPLETE|ROLLBACK_FAILED|DELETE_FAILED|CREATE_FAILED|UPDATE_ROLLBACK_FAILED|UPDATE_ROLLBACK_COMPLETE)
-              echo "Stack is in a terminal rollback/failed state. Deleting before redeploy..."
-              aws cloudformation delete-stack --stack-name "$STACK_NAME"
-              echo "Waiting for stack deletion to finish..."
-              aws cloudformation wait stack-delete-complete --stack-name "$STACK_NAME"
-              echo "Stack $STACK_NAME deleted successfully."
-              ;;
-            *)
-              echo "Stack $STACK_NAME is in status $STACK_STATUS. No action required."
-              ;;
-          esac
-        done
+        fi
+        STACK_STATUS=$(echo "$DESCRIBE_OUTPUT" | python -c "import sys,json; data=json.load(sys.stdin); print(data['Stacks'][0]['StackStatus'])")
+        echo "Current stack status: $STACK_STATUS"
+        case "$STACK_STATUS" in
+          DELETE_IN_PROGRESS)
+            echo "Deletion already in progress. Waiting for completion..."
+            aws cloudformation wait stack-delete-complete --stack-name "$TARGET_STACK_NAME"
+            ;;
+          ROLLBACK_COMPLETE|ROLLBACK_FAILED|DELETE_FAILED|CREATE_FAILED|UPDATE_ROLLBACK_FAILED|UPDATE_ROLLBACK_COMPLETE)
+            echo "Stack is in a terminal rollback/failed state. Deleting before redeploy..."
+            aws cloudformation delete-stack --stack-name "$TARGET_STACK_NAME"
+            echo "Waiting for stack deletion to finish..."
+            aws cloudformation wait stack-delete-complete --stack-name "$TARGET_STACK_NAME"
+            echo "Stack $TARGET_STACK_NAME deleted successfully."
+            ;;
+          *)
+            echo "Stack $TARGET_STACK_NAME is in status $STACK_STATUS. No action required."
+            ;;
+        esac
 artifacts:
   files:
     - '**/*'
