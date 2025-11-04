@@ -200,11 +200,17 @@ Resources:
               Action:
                 - lambda:InvokeFunction
               Resource: !Ref ParameterWriterFunctionArnParameter
+            - Effect: Allow
+              Action:
+                - cloudformation:DescribeStackResource
+              Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*"
       Tags:
         project: !Ref ProjectName
 
   ParameterWriterCustomResource:
     Type: Custom::ParameterWriter
+    DependsOn:
+      - ProjectApi
     Properties:
       ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
       Parameters:
