@@ -11,25 +11,26 @@ phases:
     runtime-versions:
       nodejs: 18
     commands:
-      - echo "Installing dependencies for seeding script"
-      - pushd scripts
-      - npm ci
-      - popd
+      - |
+        echo "Installing dependencies for seeding script"
+        pushd scripts
+        npm ci
+        popd
   build:
     commands:
-      - pushd scripts
-      - echo "Validating environment variables"
       - |
+        pushd scripts
+        echo "Validating environment variables"
         if [ -z "$PROJECTS_API_BASE_URL" ]; then
           echo "PROJECTS_API_BASE_URL environment variable must be set" >&2
           exit 1
         fi
-      - echo "Compiling TypeScript sources for seeding"
-      - ls -la
-      - npx tsc --project ./tsconfig.seed.json
-      - echo "Seeding projects via API with IAM-authenticated requests"
-  - node dist/scripts/seed-projects.js
-      - popd
+        echo "Compiling TypeScript sources for seeding"
+        ls -la
+        npx tsc --project ./tsconfig.seed.json
+        echo "Seeding projects via API with IAM-authenticated requests"
+        node dist/scripts/seed-projects.js
+        popd
 
 artifacts:
   files:
