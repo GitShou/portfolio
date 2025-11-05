@@ -30,7 +30,7 @@ export const PROJECTS_DATA: Project[] = [
     id: 1,
     title: "技術ポートフォリオ Web サイト構築",
     summary:
-      "Next.js(App Router) + Chakra UI で実装した技術ポートフォリオ。Lambda/API Gateway/DynamoDB を用いたサーバレス API と連携し、CI/CD・IaC を含むエンドツーエンドの仕組みを整備。",
+      "サーバーレスと自動化を最優先に据え、短期間でフルスタック開発を形にしたプロジェクト。\n学習・設計・実装を高速化するためAIを積極活用し、特にフロントエンドはAIに一任して自身の強みであるアーキテクチャ設計・クラウド運用・セキュリティ強化に集中",
     techStack: [
       { name: "Next.js", icon: "" },
       { name: "TypeScript", icon: "" },
@@ -44,34 +44,49 @@ export const PROJECTS_DATA: Project[] = [
     ],
     detail: {
       type: "portfolio",
-      role: "フルスタックエンジニア / アーキテクト",
+      role: "フルスタックエンジニア / アーキテクト / クラウドネイティブ開発者",
       tasks: [
         "Next.js 15 App Router + Chakra UI による UI 設計・実装",
         "API Gateway + Lambda + DynamoDB によるプロジェクトデータ API 設計",
         "CodePipeline / CodeBuild / CloudFormation による CI/CD パイプライン構築",
-        "Playwright による E2E テスト自動化とビルドパイプラインへの組み込み"
+        "Playwright による E2E テスト自動化とビルドパイプラインへの組み込み",
+        "AI 共創のワークフロー設計とフロントエンド開発の全面的な委譲管理"
       ],
       features: [
-        "API ベースのプロジェクトデータ取得とローカルモックの両立",
-        "Next.js output: export による静的サイト最適化と CloudFront 配信",
-        "CodeBuild 上での Playwright エンドツーエンドテストと成果物保存",
-        "Infrastructure as Code (CloudFormation) によるフロント/バックエンド統合管理"
+        "フロントエンド実装をAIに一任し、人はアーキテクチャと品質レビューに集中する体制",
+        "サーバーレス（API Gateway / Lambda / DynamoDB）とInfrastructure as Codeによる再現性の高い運用",
+        "CodePipeline / CodeBuild でテスト・デプロイ・シーディングまで完全自動化",
+        "CloudFront + WAF + IAM 認証で多層防御を実装し、WAN 公開APIの堅牢性を確保"
       ],
       sections: [
         {
           heading: "プロジェクト概要",
           body:
-            "求職・案件獲得活動向けに、技術力・アーキテクト力を示すためのポートフォリオサイトを新規構築。Next.js 15 の App Router を採用し、フロントエンドからバックエンド、デプロイパイプラインまで一貫して設計・実装。"
+            "求職・案件獲得活動向けに、クラウドネイティブ技術力を提示するポートフォリオサイトを短期間で構築。\nサーバーレス構成とIaCで運用負荷を極小化し、生成AIを活用して学習・設計・実装サイクルを高速化。フロントエンド開発はAIに全面委任し、人はアーキテクチャ設計・セキュリティ・自動化の高度な判断に注力した。"
         },
         {
           heading: "システム構成とアーキテクチャ",
+          body: `限られた開発期間の中で、設計・実装・運用まで一気通貫で進めるため、取捨選択を徹底。
+フロント・バックエンドを明確に分離し、API Gateway＋Lambda＋DynamoDBによるサーバーレスなバックエンドを積極的に設計。
+CI/CDはCodePipeline/CodeBuild/CloudFormationで全自動化し、テスト（Playwright E2E）もパイプラインに組み込み。
+CloudFront＋S3による静的配信とWAF/IAMによる多層セキュリティを実装し、APIはWANに配置しつつ、IAM認証を必須とすることで堅牢性を確保。`,
           list: [
-            "Next.js(App Router) を output: export で静的書き出しし、CloudFront + S3 で配信",
-            "API Gateway + Lambda + DynamoDB を組み合わせたプロジェクトデータ API",
-            "CodePipeline で CloudFormation テンプレートとフロントエンド資産を同時にデプロイ",
-            "WAF, CloudFront, IAM など AWS 標準サービスを活用したセキュアな公開"
+            "Next.js(App Router)をoutput: exportで静的書き出しし、CloudFront + S3で配信",
+            "API Gateway + Lambda + DynamoDBによるプロジェクトデータAPI（VPC内限定）",
+            "CodePipeline/CodeBuild/CloudFormationによるCI/CD自動化と多段テスト",
+            "PlaywrightによるE2Eテスト自動化と成果物アーティファクト化",
+            "WAF, CloudFront, IAMなどAWS標準サービスを活用した多層セキュリティ"
           ],
-          image: "/references/アーキテクチャ/portfolio-architecture.png"
+          image: "img/portfolio-architecture.svg"
+        },
+        {
+          heading: "セキュリティ戦略",
+          list: [
+            "API Gateway を IAM 認証必須とし、利用者を限定したままWAN公開を実現",
+            "CloudFront + AWS WAF で攻撃面を最小化し、静的配信とAPI経路を統合",
+            "DynamoDB へのアクセスは Lambda 経由に限定し、最小権限のIAMロールで統制",
+            "デプロイ後のリソース識別子をSSM Parameter Storeに登録して、他スタックから安全に参照"
+          ]
         },
         {
           heading: "開発プロセスと品質向上",
@@ -79,23 +94,25 @@ export const PROJECTS_DATA: Project[] = [
             "Playwright + json-server による E2E テストをローカルと CI の両方で自動実行",
             "CodeBuild でのマルチアーティファクト出力 (静的サイト + テスト結果)",
             "環境変数と .env 管理により、本番 API とローカルモックを切り替え",
-            "GitHub Actions ではなく AWS CodePipeline を採用し、AWS サービスで完結"
+            "GitHub Actions ではなく AWS CodePipeline を採用し、AWS サービスで完結",
+            "SSM Parameter Writer でデプロイ後のARNやURLを自動登録し、後続処理を省力化"
           ]
         },
         {
           heading: "AI活用と分業設計",
           body:
-            "要件整理やアーキテクチャ設計・CI/CD 整備などの判断領域は人間が担い、実装やドキュメント作成では GitHub Copilot を主体とした AI にコーディング支援・改善検討を委譲。AI による提案をレビューしながら採用・修正するワークフローを構築し、設計意図と一貫性を確保した。",
+            "要件整理やアーキテクチャ設計・セキュリティポリシー・CI/CD 整備といった判断領域は人間が担い、実装やドキュメント作成では GitHub Copilot を主体とした AI にコーディング支援・改善検討を委譲。特にフロントエンドはAIに全面委任し、レビューと最終調整のみ人が行うことで、クラウドアーキテクチャ・自動化・セキュリティ強化に時間を投下できた。",
           list: [
             "UI 実装・テストコードのたたき台生成を AI に任せ、品質検証と最終調整を人間が担当",
             "バックエンドや IaC に関する変更は人間が設計判断を行い、AI は補助的にコード生成を実施",
-            "AI との分業ルールを明文化し、レビュー観点と手戻りリスクを低減"
+            "AI との分業ルールを明文化し、レビュー観点と手戻りリスクを低減",
+            "学習→AI生成→レビュー→自動テストのループで改善スピードを最大化"
           ]
         },
         {
           heading: "開発期間と工数",
           list: [
-            "平日・休日を問わず 1 日平均 3 時間の開発時間を確保",
+            "平日に 1 日平均 3 時間の開発時間を確保",
             "AI 支援を活用したことで短時間でも生産性を維持し、約 1 か月で MVP を完成",
             "フェーズを区切りながら継続的に改善し、公開後も追加機能を段階的に投入"
           ]
@@ -106,10 +123,11 @@ export const PROJECTS_DATA: Project[] = [
             "フロント/バック/CI/CD を横断したフルスタックな設計力の可視化",
             "Next.js 15 の最新仕様 (app, static export, eslint 連携) へのキャッチアップ",
             "CI 上でのブラウザ自動テスト導入による品質担保体制の整備",
-            "IaC を通じた再現性の高いクラウド環境構築"
+            "IaC を通じた再現性の高いクラウド環境構築",
+            "AIに任せる領域と人間が担う領域の境界を明確化し、短期間での成果最大化"
           ],
           body:
-            "ポートフォリオ公開後は、CloudFront からの配信確認や CodePipeline での自動更新がスムーズに実行できるようになり、継続的な改善・機能追加の基盤が整った。"
+            "ポートフォリオ公開後は、CloudFront からの配信確認や CodePipeline での自動更新がスムーズに実行できるようになり、セキュアかつ自動化された運用基盤を維持しながら継続的な改善・機能追加を進められるようになった。"
         }
       ],
       improvements: [
