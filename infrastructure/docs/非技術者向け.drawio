@@ -1,0 +1,117 @@
+<mxfile host="65bd71144e">
+    <diagram name="ページ1" id="W-C_7KNfecAJrS1-0suP">
+        <mxGraphModel dx="1750" dy="938" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="#CCCCCC" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="175" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="1">
+                    <mxGeometry x="180" y="184" width="950" height="430" as="geometry"/>
+                </mxCell>
+                <mxCell id="176" value="バイキング形式のレストラン&lt;div&gt;~ Portfolio ~&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=29;" vertex="1" parent="1">
+                    <mxGeometry x="374" y="10" width="420" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="215" value="緑で記載された部分を設計したり用意したりする事が専門&lt;div&gt;それを簡単に用意できるシステムを提供しているのがAWS&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=25;" vertex="1" parent="1">
+                    <mxGeometry x="64" y="723" width="1040" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="200" value="土地" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=21;strokeColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="600.0870089285713" y="620" width="63.816964285714285" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="218" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="594.5558035714286" y="209" width="510.53571428571433" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="189" value="" style="rounded=1;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="218">
+                    <mxGeometry width="510.5357142857143" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="190" value="厨房" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=21;strokeColor=none;fontColor=#009900;" vertex="1" parent="218">
+                    <mxGeometry x="63.816964285714334" width="382.9017857142857" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="193" value="作業テーブル" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;fontSize=21;strokeColor=#009900;fontColor=#009900;strokeWidth=3;" vertex="1" parent="218">
+                    <mxGeometry x="95.72544642857144" y="129" width="276.54017857142856" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="194" value="食材置き場" style="rounded=0;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#009900;fontColor=#009900;" vertex="1" parent="218">
+                    <mxGeometry x="90.40736607142856" y="305" width="143.58816964285714" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="195" value="オーブン" style="rounded=0;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="218">
+                    <mxGeometry x="259.52232142857144" y="305" width="127.63392857142857" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="197" value="調理器具" style="rounded=0;whiteSpace=wrap;html=1;rotation=90;fontSize=21;strokeColor=#000000;fontColor=light-dark(#000000,#000000);" vertex="1" parent="218">
+                    <mxGeometry x="335.0390625" y="160" width="244.63169642857142" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="198" value="調味料置き場" style="rounded=0;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#000000;fontColor=#000000;" vertex="1" parent="218">
+                    <mxGeometry x="90.40736607142856" y="35" width="143.58816964285714" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="199" value="冷蔵庫&lt;div&gt;&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;食材&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#009900;fontColor=#009900;" vertex="1" parent="218">
+                    <mxGeometry x="259.52232142857144" y="35" width="127.63392857142857" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="207" value="シェフ" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=20;" vertex="1" parent="218">
+                    <mxGeometry x="14.890625" y="154" width="48.926339285714285" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="208" value="Webデザイナー" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=190;position=0.59;fontSize=20;" vertex="1" parent="1">
+                    <mxGeometry x="557" y="110" width="150" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="219" value="&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;全自動&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;食品検査機&lt;/font&gt;&lt;/div&gt;" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;direction=west;fontSize=17;strokeColor=#009900;fontColor=#009900;strokeWidth=3;" vertex="1" parent="1">
+                    <mxGeometry x="450" y="359" width="144.56" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="230" value="機材等が壊れたら&lt;div&gt;自動で新品に取り換えてくれる&lt;/div&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;direction=east;fontSize=18;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="84" width="270" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="177" value="" style="rounded=1;whiteSpace=wrap;html=1;fontSize=21;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="1">
+                    <mxGeometry x="213.99633928571427" y="209" width="200" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="192" value="" style="group;fontSize=21;strokeColor=none;" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="266.0833928571429" y="264" width="85.08928571428571" height="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="179" value="" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rotation=90;fontSize=21;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="192">
+                    <mxGeometry x="-101.04352678571428" y="95" width="287.1763392857143" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="180" value="料理" style="ellipse;whiteSpace=wrap;html=1;fontSize=20;strokeColor=#000000;" vertex="1" parent="192">
+                    <mxGeometry x="15.954241071428571" y="37" width="53.18080357142857" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="181" value="料理" style="ellipse;whiteSpace=wrap;html=1;fontSize=20;strokeColor=#000000;" vertex="1" parent="192">
+                    <mxGeometry x="15.954241071428571" y="107" width="53.18080357142857" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="182" value="料理" style="ellipse;whiteSpace=wrap;html=1;fontSize=20;strokeColor=#000000;" vertex="1" parent="192">
+                    <mxGeometry x="15.954241071428571" y="177" width="53.18080357142857" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="225" value="&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;入口&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8.000030517578182;direction=north;fontSize=20;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="1">
+                    <mxGeometry x="140" y="490" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="220" value="" style="shape=flexArrow;endArrow=classic;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;width=47.89473684210527;endSize=11.973684210526317;endWidth=60.05540166204987;fillColor=default;strokeColor=#009900;fontColor=#009900;strokeWidth=3;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="219" target="179">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="440" y="400" as="sourcePoint"/>
+                        <mxPoint x="540" y="580" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="222" value="&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;全自動&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;配膳機&lt;/font&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=16;fontColor=#009900;" vertex="1" connectable="0" parent="220">
+                    <mxGeometry x="-0.1267" y="25" relative="1" as="geometry">
+                        <mxPoint y="-25" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="233" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="28.46633928571427" y="390" width="100" height="176" as="geometry"/>
+                </mxCell>
+                <mxCell id="214" value="客" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=20;" vertex="1" parent="233">
+                    <mxGeometry x="25.532276785714288" y="86" width="48.926339285714285" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="231" value="ブラウザ" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.4;fontSize=20;position2=0.5;" vertex="1" parent="233">
+                    <mxGeometry width="100" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="206" value="Webページ" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=140;position=0.74;fontSize=20;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="100" width="120" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="234" value="コンピュータ&lt;br&gt;(サーバー)" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=30;position=0.4;fontSize=20;position2=1;direction=north;" vertex="1" parent="1">
+                    <mxGeometry x="430.78" y="640" width="175" height="67" as="geometry"/>
+                </mxCell>
+                <mxCell id="188" value="ホール" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=21;strokeColor=none;fontColor=#009900;" vertex="1" parent="1">
+                    <mxGeometry x="210.62946428571428" y="209" width="202.08705357142856" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="235" value="URL" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;size=70;position=0.58;fontSize=20;direction=west;" vertex="1" parent="1">
+                    <mxGeometry x="110" y="550" width="120" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="236" value="&lt;font style=&quot;color: rgb(0, 153, 0);&quot;&gt;スタッフ専用入口&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=8.000030517578182;direction=west;fontSize=20;strokeColor=#009900;strokeWidth=3;" vertex="1" parent="1">
+                    <mxGeometry x="1000" y="555" width="85" height="110" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
