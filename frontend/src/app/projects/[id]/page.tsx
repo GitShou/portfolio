@@ -1,6 +1,18 @@
 import { notFound } from "next/navigation";
 import {
-  Container, Box, Heading, Text, HStack, Tag, VStack, SimpleGrid, Image, Divider, UnorderedList, ListItem, GridItem
+  Container,
+  Box,
+  Heading,
+  Text,
+  HStack,
+  Tag,
+  VStack,
+  SimpleGrid,
+  Image,
+  Divider,
+  UnorderedList,
+  ListItem,
+  Link
 } from "@chakra-ui/react";
 import { fetchProjectById, fetchProjects } from "@/lib/projects/api";
 import { Project } from "@/lib/projects/types";
@@ -18,10 +30,20 @@ export async function generateStaticParams() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function ProjectDetailPage(props: any) {
   const { params } = props;
-  const { id } = params;
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
   const project: Project | null = await fetchProjectById(id);
   if (!project || !project.detail) return notFound();
-  const { sections, role, tasks, features, architectureUrl, improvements } = project.detail;
+  const { sections, role, pdf } = project.detail;
+
+  const renderBody = (body?: string) => {
+    if (!body) return null;
+    return body.split("\n").map((line, index) => (
+      <Text key={`${line}-${index}`} mt={index === 0 ? 4 : 2} fontSize="lg" color="gray.700">
+        {line}
+      </Text>
+    ));
+  };
 
   return (
     <Container maxW="6xl" py={12}>
@@ -33,6 +55,19 @@ export default async function ProjectDetailPage(props: any) {
         <Text fontSize="xl" color="gray.600">
           {project.summary}
         </Text>
+        {role && (
+          <Box mt={2}>
+            <Text fontWeight="bold" color="gray.700">
+              役割
+            </Text>
+            <Text>{role}</Text>
+          </Box>
+        )}
+        {pdf && (
+          <Link href={pdf} color="teal.500" isExternal fontWeight="semibold">
+            関連資料を開く
+          </Link>
+        )}
         <HStack spacing={3} wrap="wrap" pt={4}>
           {project.techStack.map((tech) =>
             tech.icon ? (
@@ -52,49 +87,75 @@ export default async function ProjectDetailPage(props: any) {
       </VStack>
 
       <Divider mb={8} />
-
-      {/* 2. ポジションと業務内容 / プロジェクトの詳細 (左右分割) */}
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={10} mb={10}>
-        <GridItem>
-          <Heading as="h2" size="lg" mb={4}>自分のポジションと業務内容</Heading>
-          <Text fontWeight="bold" mb={2}>ポジション: {role}</Text>
-          <UnorderedList spacing={1} pl={4}>
-            {tasks && tasks.map((task: string) => <ListItem key={task}>{task}</ListItem>)}
-          </UnorderedList>
-        </GridItem>
-        <GridItem>
-          <Heading as="h2" size="lg" mb={4}>プロジェクトの詳細</Heading>
-          <Text fontSize="lg">{sections?.[0]?.body || "詳細情報"}</Text>
-        </GridItem>
-      </SimpleGrid>
-      <Divider mb={8} />
-      {/* 3. システムの特徴 */}
-      <Box mb={10}>
-        <Heading as="h2" size="xl" mb={4}>システムの特徴</Heading>
-        <UnorderedList spacing={2} pl={4} fontSize="lg">
-          {features && features.map((feature: string) => <ListItem key={feature} fontWeight="semibold">{feature}</ListItem>)}
-        </UnorderedList>
-      </Box>
-      {/* 4. アーキテクチャ図 */}
-      <Box mb={10}>
-        <Heading as="h2" size="xl" mb={4}>システムアーキテクチャ図</Heading>
-        <Box border="1px solid" borderColor="gray.300" p={6} borderRadius="md">
-          {architectureUrl && <Image src={architectureUrl} alt="システムアーキテクチャ図" objectFit="contain" />}
-          <Text align="center" mt={3} fontSize="sm" color="gray.500">（S3, CloudFront, API Gateway, Lambda, DynamoDB を中心としたサーバレス構成）</Text>
-        </Box>
-      </Box>
-      {/* 5. 工夫点 (強みアピールの核) */}
-      <Box mb={10}>
-        <Heading as="h2" size="xl" mb={6}>工夫点・課題解決への貢献 💡</Heading>
-        <VStack spacing={8} align="stretch">
-          {improvements && improvements.map((item: { title: string; description: string }) => (
-            <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
-              <Heading as="h3" size="md" mb={2} color="orange.600">{item.title}</Heading>
-              <Text>{item.description}</Text>
+      <VStack spacing={12} align="stretch">
+        {sections.map((section, index) => {
+          const sectionHeading = section.heading ?? section.title;
+          return (
+            <Box key={`${sectionHeading ?? "section"}-${index}`}>
+              {sectionHeading && (
+                <Heading as="h2" size="xl" mb={section.summary ? 2 : 4}>
+                  {sectionHeading}
+                </Heading>
+              )}
+            {section.summary && (
+              <Text fontSize="lg" color="gray.500" mb={4}>
+                {section.summary}
+              </Text>
+            )}
+            {renderBody(section.body)}
+            {section.list && section.list.length > 0 && (
+              <UnorderedList spacing={2} pl={4} fontSize="lg" mt={section.body ? 4 : 2}>
+                {section.list.map((item) => (
+                  <ListItem key={item} fontWeight="semibold">
+                    {item}
+                  </ListItem>
+                ))}
+              </UnorderedList>
+            )}
+            {section.details && section.details.length > 0 && (
+              <SimpleGrid
+                columns={{ base: 1, md: Math.min(section.details.length, 2), lg: Math.min(section.details.length, 3) }}
+                spacing={6}
+                mt={6}
+              >
+                {section.details.map((detail) => (
+                  <Box key={detail.heading} p={6} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
+                    <Heading as="h3" size="md" mb={2} color="teal.600">
+                      {detail.heading}
+                    </Heading>
+                    <Text color="gray.700">{detail.body}</Text>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            )}
+            {section.image && (
+              <Box mt={6}>
+                <Box border="1px solid" borderColor="gray.200" p={6} borderRadius="md" bg="white">
+                  <Image src={section.image} alt={section.heading ?? "section image"} objectFit="contain" mx="auto" />
+                </Box>
+                {section.imgURL && (
+                  <Link href={section.imgURL} isExternal color="teal.500" mt={3} display="inline-block">
+                    高解像度の画像を開く
+                  </Link>
+                )}
+              </Box>
+            )}
+            {section.more && section.more.length > 0 && (
+              <VStack spacing={8} align="stretch" mt={6}>
+                {section.more.map((item) => (
+                  <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
+                    <Heading as="h3" size="md" mb={2} color="orange.600">
+                      {item.title}
+                    </Heading>
+                    <Text color="gray.700">{item.description}</Text>
+                  </Box>
+                ))}
+              </VStack>
+            )}
             </Box>
-          ))}
-        </VStack>
-      </Box>
+          );
+        })}
+      </VStack>
     </Container>
   );
 }

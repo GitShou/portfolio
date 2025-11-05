@@ -1,24 +1,30 @@
-export type ProjectSection = {
-  heading?: string;
-  body?: string;
-  list?: string[];
-  image?: string;
+export type ProjectSectionDetail = {
+  heading: string;
+  body: string;
 };
 
-export type ProjectImprovement = {
+export type ProjectSectionMore = {
   title: string;
   description: string;
+};
+
+export type ProjectSection = {
+  heading?: string;
+  title?: string;
+  summary?: string;
+  body?: string;
+  list?: string[];
+  details?: ProjectSectionDetail[];
+  image?: string;
+  imgURL?: string;
+  more?: ProjectSectionMore[];
 };
 
 export type ProjectDetail = {
   type: string;
   pdf?: string;
-  sections: ProjectSection[];
   role?: string;
-  tasks?: string[];
-  features?: string[];
-  architectureUrl?: string;
-  improvements?: ProjectImprovement[];
+  sections: ProjectSection[];
 };
 
 export type ProjectTech = {
@@ -31,6 +37,7 @@ export type ProjectMetadata = {
   status?: string;
   createdAt?: string;
   updatedAt?: string;
+  slug?: string | null;
 };
 
 export type Project = {

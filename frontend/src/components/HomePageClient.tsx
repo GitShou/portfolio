@@ -181,14 +181,14 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
           <Text fontSize="sm" color="teal.600" mb={2}>
             AWS移行／サーバーレス開発／技術研修／自動化／システム設計レビューなど多様なPJ経験
           </Text>
-          <Box overflowX="auto">
-            <Flex gap={6} wrap="nowrap">
+          <Box overflowX="auto" pb={2}>
+            <HStack spacing={6} align="stretch" minW="fit-content">
               {projects.map((project) => (
-                <Box minW={{ base: "300px", md: "350px" }} key={project.id}>
+                <Box key={project.id} minW={{ base: "280px", md: "320px" }} maxW="320px">
                   <ProjectCard project={project} />
                 </Box>
               ))}
-            </Flex>
+            </HStack>
           </Box>
         </Container>
       </div>
