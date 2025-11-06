@@ -12,7 +12,9 @@ import {
   Divider,
   UnorderedList,
   ListItem,
-  Link
+  Link,
+  Grid,
+  GridItem
 } from "@chakra-ui/react";
 import { fetchProjectById, fetchProjects } from "@/lib/projects/api";
 import { Project } from "@/lib/projects/types";
@@ -35,6 +37,19 @@ export default async function ProjectDetailPage(props: any) {
   const project: Project | null = await fetchProjectById(id);
   if (!project || !project.detail) return notFound();
   const { sections, role, pdf } = project.detail;
+
+  const sectionEntries = sections.map((section, index) => {
+    const heading = section.heading ?? section.title ?? null;
+    const anchorId = `section-${index + 1}`;
+    return {
+      section,
+      heading,
+      anchorId,
+      displayLabel: heading ?? `セクション ${index + 1}`
+    };
+  });
+
+  const tocItems = sectionEntries.filter((entry) => entry.heading);
 
   const renderBody = (body?: string) => {
     if (!body) return null;
@@ -87,75 +102,106 @@ export default async function ProjectDetailPage(props: any) {
       </VStack>
 
       <Divider mb={8} />
-      <VStack spacing={12} align="stretch">
-        {sections.map((section, index) => {
-          const sectionHeading = section.heading ?? section.title;
-          return (
-            <Box key={`${sectionHeading ?? "section"}-${index}`}>
-              {sectionHeading && (
-                <Heading as="h2" size="xl" mb={section.summary ? 2 : 4}>
-                  {sectionHeading}
-                </Heading>
-              )}
-            {section.summary && (
-              <Text fontSize="lg" color="gray.500" mb={4}>
-                {section.summary}
-              </Text>
-            )}
-            {renderBody(section.body)}
-            {section.list && section.list.length > 0 && (
-              <UnorderedList spacing={2} pl={4} fontSize="lg" mt={section.body ? 4 : 2}>
-                {section.list.map((item) => (
-                  <ListItem key={item} fontWeight="semibold">
-                    {item}
-                  </ListItem>
-                ))}
-              </UnorderedList>
-            )}
-            {section.details && section.details.length > 0 && (
-              <SimpleGrid
-                columns={{ base: 1, md: Math.min(section.details.length, 2), lg: Math.min(section.details.length, 3) }}
-                spacing={6}
-                mt={6}
-              >
-                {section.details.map((detail) => (
-                  <Box key={detail.heading} p={6} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
-                    <Heading as="h3" size="md" mb={2} color="teal.600">
-                      {detail.heading}
-                    </Heading>
-                    <Text color="gray.700">{detail.body}</Text>
+      <Grid templateColumns={{ base: "1fr", lg: "3fr 1fr" }} gap={{ base: 12, lg: 16 }} alignItems="start">
+        <GridItem>
+          <VStack spacing={12} align="stretch">
+            {sectionEntries.map(({ section, heading, anchorId, displayLabel }, index) => (
+              <Box key={`${anchorId}-${index}`} id={anchorId} scrollMarginTop={{ base: 20, md: 28 }}>
+                {heading && (
+                  <Heading as="h2" size="xl" mb={section.summary ? 2 : 4}>
+                    {heading}
+                  </Heading>
+                )}
+                {!heading && (
+                  <Heading as="h2" size="xl" mb={section.summary ? 2 : 4}>
+                    {displayLabel}
+                  </Heading>
+                )}
+                {section.summary && (
+                  <Text fontSize="lg" color="gray.500" mb={4}>
+                    {section.summary}
+                  </Text>
+                )}
+                {renderBody(section.body)}
+                {section.list && section.list.length > 0 && (
+                  <UnorderedList spacing={2} pl={4} fontSize="lg" mt={section.body ? 4 : 2}>
+                    {section.list.map((item) => (
+                      <ListItem key={item} fontWeight="semibold">
+                        {item}
+                      </ListItem>
+                    ))}
+                  </UnorderedList>
+                )}
+                {section.details && section.details.length > 0 && (
+                  <SimpleGrid
+                    columns={{
+                      base: 1,
+                      md: Math.min(section.details.length, 2),
+                      lg: Math.min(section.details.length, 3)
+                    }}
+                    spacing={6}
+                    mt={6}
+                  >
+                    {section.details.map((detail) => (
+                      <Box key={detail.heading} p={6} borderWidth="1px" borderRadius="lg" bg="white" shadow="sm">
+                        <Heading as="h3" size="md" mb={2} color="teal.600">
+                          {detail.heading}
+                        </Heading>
+                        <Text color="gray.700">{detail.body}</Text>
+                      </Box>
+                    ))}
+                  </SimpleGrid>
+                )}
+                {section.image && (
+                  <Box mt={6}>
+                    <Box border="1px solid" borderColor="gray.200" p={6} borderRadius="md" bg="white">
+                      <Image
+                        src={section.image}
+                        alt={section.heading ?? section.title ?? "section image"}
+                        objectFit="contain"
+                        mx="auto"
+                      />
+                    </Box>
+                    {section.imgURL && (
+                      <Link href={section.imgURL} isExternal color="teal.500" mt={3} display="inline-block">
+                        高解像度の画像を開く
+                      </Link>
+                    )}
                   </Box>
-                ))}
-              </SimpleGrid>
-            )}
-            {section.image && (
-              <Box mt={6}>
-                <Box border="1px solid" borderColor="gray.200" p={6} borderRadius="md" bg="white">
-                  <Image src={section.image} alt={section.heading ?? "section image"} objectFit="contain" mx="auto" />
-                </Box>
-                {section.imgURL && (
-                  <Link href={section.imgURL} isExternal color="teal.500" mt={3} display="inline-block">
-                    高解像度の画像を開く
-                  </Link>
+                )}
+                {section.more && section.more.length > 0 && (
+                  <VStack spacing={8} align="stretch" mt={6}>
+                    {section.more.map((item) => (
+                      <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
+                        <Heading as="h3" size="md" mb={2} color="orange.600">
+                          {item.title}
+                        </Heading>
+                        <Text color="gray.700">{item.description}</Text>
+                      </Box>
+                    ))}
+                  </VStack>
                 )}
               </Box>
-            )}
-            {section.more && section.more.length > 0 && (
-              <VStack spacing={8} align="stretch" mt={6}>
-                {section.more.map((item) => (
-                  <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
-                    <Heading as="h3" size="md" mb={2} color="orange.600">
-                      {item.title}
-                    </Heading>
-                    <Text color="gray.700">{item.description}</Text>
-                  </Box>
+            ))}
+          </VStack>
+        </GridItem>
+        {tocItems.length > 0 && (
+          <GridItem display={{ base: "none", lg: "block" }}>
+            <Box position="sticky" top="120px" borderWidth="1px" borderRadius="lg" p={6} bg="white" shadow="md">
+              <Heading as="h3" size="md" mb={4} color="gray.700">
+                目次
+              </Heading>
+              <VStack align="stretch" spacing={3}>
+                {tocItems.map(({ anchorId, displayLabel }) => (
+                  <Link key={anchorId} href={`#${anchorId}`} color="teal.600" fontWeight="semibold">
+                    {displayLabel}
+                  </Link>
                 ))}
               </VStack>
-            )}
             </Box>
-          );
-        })}
-      </VStack>
+          </GridItem>
+        )}
+      </Grid>
     </Container>
   );
 }
