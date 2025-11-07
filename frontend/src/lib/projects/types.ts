@@ -45,6 +45,7 @@ export type Project = {
   id: number | string;
   title: string;
   summary: string;
+  git?: string;
   techStack: ProjectTech[];
   detail?: ProjectDetail;
   metadata?: ProjectMetadata;

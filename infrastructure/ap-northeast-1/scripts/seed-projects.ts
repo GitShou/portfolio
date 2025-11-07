@@ -79,12 +79,7 @@ async function signedFetch(
   });
 }
 
-type CreateProjectPayload = {
-  id: Project["id"];
-  title: Project["title"];
-  summary: Project["summary"];
-  techStack: Project["techStack"];
-  detail?: Project["detail"];
+type CreateProjectPayload = Project & {
   metadata: {
     order: number;
     status: string;
@@ -169,11 +164,7 @@ async function seedProjects(): Promise<void> {
 
   for (const [index, project] of PROJECTS_DATA.entries()) {
     const payload: CreateProjectPayload = {
-      id: project.id,
-      title: project.title,
-      summary: project.summary,
-      techStack: project.techStack,
-      detail: project.detail,
+      ...project,
       metadata: {
         order: index + 1,
         status: existingProjectsById.get(String(project.id))?.metadata?.status ?? "PUBLISHED",
