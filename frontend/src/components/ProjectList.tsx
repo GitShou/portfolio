@@ -10,7 +10,7 @@ const ProjectList = ({ projects }: ProjectListProps) => (
     {projects.map((project: Project) => (
       <div key={project.id} className="project-card">
         <h2>{project.title}</h2>
-        <p>{project.summary}</p>
+  <p style={{ whiteSpace: "pre-line" }}>{project.summary}</p>
         <ProjectTechStack techStack={project.techStack} />
       </div>
     ))}

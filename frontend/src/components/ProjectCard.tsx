@@ -18,7 +18,7 @@ const ProjectCard = ({ project }: ProjectProps) => {
                 <Heading size="md" mb={2}>{project.title}</Heading>
             </CardHeader>
             <CardBody>
-                <Text fontSize="sm">{project.summary}</Text>
+                <Text fontSize="sm" whiteSpace="pre-line">{project.summary}</Text>
                 {/* 技術スタックの表示を追加 */}
                 <Box mt={3}>
                     <Text fontSize="xs" color="gray.500" fontWeight="bold">Tech Stack:</Text>

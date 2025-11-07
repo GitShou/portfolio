@@ -31,6 +31,13 @@ phases:
     commands:
       - echo "Syncing static output to s3://${DEPLOY_S3_BUCKET}"
       - aws s3 sync out/ "s3://${DEPLOY_S3_BUCKET}" --delete
+      - echo "Ensuring extensionless HTML objects have text/html content-type"
+      - |
+        find out -type f ! -name "*.*" -print0 | while IFS= read -r -d '' file; do
+          key=${file#out/}
+          echo "Re-uploading ${key} with text/html"
+          aws s3 cp "$file" "s3://${DEPLOY_S3_BUCKET}/${key}" --content-type "text/html"
+        done
       - echo "Creating CloudFront invalidation for distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
       - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
 

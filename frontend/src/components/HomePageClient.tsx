@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Avatar,
   Box,
   Button,
   Container,
@@ -48,9 +47,10 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         bg="gray.800"
         color="white"
         borderRadius="xl"
+        display="flex"
+        justifyContent="center"
       >
-        <Flex align="center" justify="space-between">
-          <Box flex="1">
+        <Box maxW="720px" w="full">
             <Heading as="h1" size="lg" mb={4}>
               10年弱のITエンジニア経験
               <br />
@@ -71,7 +71,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             <Text fontSize="sm" color="teal.200" mb={2}>
               「未知を既知に変える」――技術力と伝える力で、組織や現場に新しい価値をもたらします。
             </Text>
-            <HStack spacing={4}>
+            <HStack spacing={4} flexWrap="wrap">
               <Button colorScheme="teal" variant="solid" onClick={scrollToProjects}>
                 プロジェクト
               </Button>
@@ -79,17 +79,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
                 アウトプット
               </Button>
             </HStack>
-          </Box>
-          <Box flexShrink={0} ml={8}>
-            <Avatar
-              size="2xl"
-              src="/dummy-face.jpg"
-              name="YOUR NAME"
-              bg="gray.300"
-              border="4px solid white"
-            />
-          </Box>
-        </Flex>
+        </Box>
       </Container>
 
       <Container as="section" id="portfolio-project" maxW="1200px" px={8} mb={12}>
@@ -207,20 +197,20 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
             {[
               {
-                title: "未知領域への適応力",
-                body: "未経験分野でも背景を素早く理解し、短期間で成果を創出。PoCから本番導入までリード。"
+                title: "強力な自走力と探求力",
+                body: "問題が発生してもその原因と最適な解決策を粘り強く追及し、成果物に反映させます。"
               },
               {
-                title: "自走力と継続学習",
-                body: "日々のインプットと検証で知識を更新し、課題設定から解決まで主体的にドライブ。"
+                title: "未知領域への適応力",
+                body: "未経験分野でも積極的に探究し、その場限りの理解で済ませず、応用します。"
               },
               {
                 title: "知見共有と教育設計",
-                body: "登壇や資料化を通じて複雑なサーバーレス構成を分かりやすく伝え、組織全体に展開。"
+                body: "登壇や資料化を通じて複雑なサーバーレス構成を分かりやすく伝え、組織全体に展開することを惜しみません。"
               },
               {
-                title: "AWSサーバーレス×自動化",
-                body: "アーキテクチャ設計とCI/CD・運用自動化を組み合わせ、継続的な改善が可能な体制を構築。"
+                title: "自身の領域だけに留まらない広い視野",
+                body: "システムの構造を俯瞰的に捉え、専門外の領域に関する技術でも積極的に学び、最適な構造を見出します。"
               }
             ].map((highlight) => (
               <Box key={highlight.title} bg="gray.50" borderRadius="lg" p={5} borderWidth="1px" borderColor="gray.100" boxShadow="xs">
@@ -262,9 +252,21 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             OUTPUT
           </Heading>
           <Text fontSize="sm" color="teal.600" mb={2}>
-            技術研修資料・登壇資料・社内外向けナレッジ共有実績
+            ソースコード・技術研修資料・登壇資料・社内外向けナレッジ共有実績
           </Text>
           <SimpleGrid columns={{ base: 1, md: 3 }} gap={6}>
+            <Box bg="white" p={5} borderRadius="lg" boxShadow="sm">
+              <Text fontWeight="bold" mb={2}>
+                本WebシステムのGitHubリポジトリ
+              </Text>
+              <Link
+                href="https://github.com/GitShou/portfolio"
+                color="teal.500"
+                isExternal
+              >
+                GitHubリポジトリを見る
+              </Link>
+            </Box>
             <Box bg="white" p={5} borderRadius="lg" boxShadow="sm">
               <Text fontWeight="bold" mb={2}>
                 最新事例!AWS Lambdaを使った サーバレスのアプリケーション開発

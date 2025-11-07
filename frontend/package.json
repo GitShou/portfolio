@@ -16,11 +16,11 @@
     "test:e2e:update": "playwright test --update-snapshots"
   },
   "dependencies": {
-  "@aws-crypto/sha256-js": "^3.0.0",
-  "@aws-sdk/credential-provider-node": "^3.637.0",
-  "@aws-sdk/protocol-http": "^3.374.0",
-  "@aws-sdk/signature-v4": "^3.374.0",
-    "@chakra-ui/card": "^2.2.0",
+    "@aws-crypto/sha256-js": "^3.0.0",
+    "@aws-sdk/credential-provider-node": "^3.637.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
+    "@aws-sdk/signature-v4": "^3.374.0",
+  "@chakra-ui/card": "^2.2.0",
     "@chakra-ui/react": "^2.10.0",
     "@chakra-ui/system": "^2.6.2",
     "@emotion/react": "^11.14.0",
