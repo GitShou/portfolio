@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "tsx scripts/prepare-static-paths.ts",
     "start": "next start",
     "lint": "eslint",
     "export": "next export",
