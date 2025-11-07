@@ -6,7 +6,7 @@ export default function Header() {
     <Flex as="header" w="100%" maxW="1200px" mx="auto" px={8} py={4} align="center" justify="space-between">
       <HStack spacing={4}>
         <Avatar size="sm" src="/dummy-logo.png" bg="teal.500" />
-        <Text fontWeight="bold">YOUR NAME / AWS ENGINEER</Text>
+        <Text fontWeight="bold">Shogo Hagimori / AWS ENGINEER</Text>
       </HStack>
       <HStack spacing={8} fontWeight="medium" color="teal.600">
         <NextLink href="#about" passHref>

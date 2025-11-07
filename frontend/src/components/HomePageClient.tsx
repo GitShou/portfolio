@@ -9,6 +9,7 @@ import {
   Heading,
   Link,
   HStack,
+  Image,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
@@ -91,40 +92,63 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         </Flex>
       </Container>
 
+      <Container as="section" id="portfolio-project" maxW="1200px" px={8} mb={12}>
+        <Flex
+          direction={{ base: "column", md: "row" }}
+          align="center"
+          gap={{ base: 8, md: 12 }}
+          bg="white"
+          borderRadius="xl"
+          boxShadow="md"
+          p={{ base: 6, md: 10 }}
+        >
+          <Box flex="1">
+            <Heading as="h2" size="md" mb={4} color="teal.700">
+              技術ポートフォリオサイト開発の舞台裏
+            </Heading>
+            <Text mb={4} color="gray.700" fontSize="sm">
+              このサイトは Next.js と Chakra UI、AWS サーバーレス基盤を活用したフルマネージド構成で構築しています。
+              CloudFront や API Gateway、Lambda、DynamoDB を組み合わせ、CI/CD まで自動化したアーキテクチャを採用しています。
+            </Text>
+            <Text mb={6} color="gray.600" fontSize="sm">
+              アーキテクチャ図と実装の詳細、得られた知見はプロジェクトページにまとめています。ぜひご覧ください。
+            </Text>
+            <Button as={Link} href="/projects/1" colorScheme="teal" variant="solid">
+              プロジェクト詳細を見る
+            </Button>
+          </Box>
+          <Box flex="1" w="full">
+            <Image
+              src="/img/portfolio-architecture.svg"
+              alt="技術ポートフォリオサイトのアーキテクチャ図"
+              borderRadius="lg"
+              borderWidth="1px"
+              borderColor="gray.200"
+              bg="white"
+              p={{ base: 4, md: 6 }}
+            />
+          </Box>
+        </Flex>
+      </Container>
+
       <Container as="section" id="about" maxW="1200px" px={8} mb={12}>
         <Flex align="flex-start" gap={12}>
           <Box flex="1">
             <Heading as="h2" size="md" mb={4}>
               ABOUT ME
             </Heading>
-            <Text mb={2} fontSize="sm" color="gray.600">
-              ITエンジニア歴10年弱。
+            <Text mb={2} fontSize="sm" color="gray.600" lineHeight="1.9">
+              AWSサーバーレスとクラウド設計を専門とするフルスタックエンジニア。
               <br />
-              社内外で未開拓技術の導入・システム開発・技術研修講師を担当し、
+              未開拓技術の導入から研修設計まで担い、延べ200名超へ登壇した実績あり。
               <br />
-              200名以上への登壇やチームリーダー経験も豊富。
+              フリーランスと大手企業でリーダーを務め、設計・実装・運用改善を横断。
               <br />
-              <br />
-              <b>強み：</b>
-              <br />
-              ・未知技術のキャッチアップと分かりやすい知見共有
-              <br />
-              ・AWSサーバーレスアーキテクチャ設計・構築・運用
-              <br />
-              ・業務自動化やコスト最適化の現場改善
-              <br />
-              ・チームの強みを引き出すリーダーシップと適材適所の推進
-              <br />
-              <br />
-              前職では技術研修の企画・講師を3回主導し、
-              <br />
-              フリーランスや大手企業での多様なPJ経験を活かして、
-              <br />
-              現場に新しい価値を生み出してきました。
+              自走力と学習意欲を武器に、短期間で成果を出すチームづくりを支援しています。
             </Text>
           </Box>
           <Box flex="1">
-            <Heading as="h3" size="sm" mb={2}>
+            <Heading as="h3" size="md" mb={2}>
               TECHNICAL SKILLS
             </Heading>
             <HStack spacing={2} mb={2} flexWrap="wrap">
@@ -140,7 +164,6 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
                 "codebuild_64.svg",
                 "billing_64.svg",
                 "cost-explorer_64.svg",
-                "tag-editor_64.svg",
                 "athena_64.svg",
                 "glue_64.svg",
                 "cloudwatch_64.svg",
@@ -167,10 +190,50 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
               ))}
             </HStack>
             <Text fontSize="xs" color="teal.600">
-              AWS認定資格／サーバーレス設計／CI/CD／技術研修資料作成・講師／自動化・効率化／マルチクラウド
+              フルスクラッチ／サーバーレス設計／CI/CD／技術研修資料作成・講師／自動化・効率化
             </Text>
           </Box>
         </Flex>
+      </Container>
+
+      <Container as="section" id="highlights" maxW="1200px" px={8} mb={12}>
+        <Box bg="white" borderRadius="xl" boxShadow="sm" borderWidth="1px" borderColor="gray.100" p={{ base: 6, md: 8 }}>
+          <Heading as="h2" size="md" mb={2} color="teal.700">
+            HIGHLIGHTS
+          </Heading>
+          <Text fontSize="sm" color="gray.600" mb={6}>
+            現場で実践してきた強みと提供価値を4つの視点でまとめました。
+          </Text>
+          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
+            {[
+              {
+                title: "未知領域への適応力",
+                body: "未経験分野でも背景を素早く理解し、短期間で成果を創出。PoCから本番導入までリード。"
+              },
+              {
+                title: "自走力と継続学習",
+                body: "日々のインプットと検証で知識を更新し、課題設定から解決まで主体的にドライブ。"
+              },
+              {
+                title: "知見共有と教育設計",
+                body: "登壇や資料化を通じて複雑なサーバーレス構成を分かりやすく伝え、組織全体に展開。"
+              },
+              {
+                title: "AWSサーバーレス×自動化",
+                body: "アーキテクチャ設計とCI/CD・運用自動化を組み合わせ、継続的な改善が可能な体制を構築。"
+              }
+            ].map((highlight) => (
+              <Box key={highlight.title} bg="gray.50" borderRadius="lg" p={5} borderWidth="1px" borderColor="gray.100" boxShadow="xs">
+                <Heading as="h3" size="sm" mb={2} color="teal.700">
+                  {highlight.title}
+                </Heading>
+                <Text fontSize="sm" color="gray.700">
+                  {highlight.body}
+                </Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
       </Container>
 
       <div ref={projectsRef}>

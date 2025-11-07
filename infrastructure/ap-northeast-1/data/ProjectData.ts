@@ -38,6 +38,7 @@ export type Project = {
   id: number;
   title: string;
   summary: string;
+  git?: string;
   techStack: ProjectTechStack[];
   detail?: ProjectDetail;
 };
@@ -48,16 +49,17 @@ export const PROJECTS_DATA: Project[] = [
     title: "技術ポートフォリオ Web サイト構築",
     summary:
       "自身のAWSに関する知見や技術を表現するためのポートフォリオ。\nサーバーレスと自動化を最大のテーマとし、それを実現するための技術スタックを採用。\n短期間でより良いものを実現するために、AIを活用して設計・実装を高速化。",
+    git: "https://github.com/GitShou/portfolio",
     techStack: [
-      { name: "Next.js", icon: "" },
-      { name: "TypeScript", icon: "" },
-      { name: "Chakra UI", icon: "" },
       { name: "AWS API Gateway", icon: "/aws-icons/api-gateway_64.svg" },
       { name: "AWS Lambda", icon: "/aws-icons/lambda_64.svg" },
       { name: "Amazon DynamoDB", icon: "/aws-icons/dynamodb_64.svg" },
       { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
       { name: "Amazon S3", icon: "/aws-icons/s3_64.svg" },
-      { name: "AWS CodePipeline", icon: "/aws-icons/codebuild_64.svg" }
+      { name: "AWS CodePipeline", icon: "/aws-icons/codebuild_64.svg" },
+      { name: "Next.js", icon: "" },
+      { name: "TypeScript", icon: "" },
+      { name: "Chakra UI", icon: "" }
     ],
     detail: {
       type: "portfolio",

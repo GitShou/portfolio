@@ -70,13 +70,30 @@ export default async function ProjectDetailPage(props: any) {
         <Text fontSize="xl" color="gray.600">
           {project.summary}
         </Text>
-        {role && (
-          <Box mt={2}>
-            <Text fontWeight="bold" color="gray.700">
-              役割
-            </Text>
-            <Text>{role}</Text>
-          </Box>
+        {(role || project.git) && (
+          <HStack
+            align={{ base: "flex-start", md: "center" }}
+            spacing={{ base: 6, md: 10 }}
+            flexWrap="wrap"
+            mt={2}
+          >
+            {role && (
+              <Box>
+                <Text fontWeight="bold" color="gray.700">
+                  役割
+                </Text>
+                <Text>{role}</Text>
+              </Box>
+            )}
+            {project.git && (
+              <HStack align="center" spacing={3}>
+                <Image src="/img/GitHub.png" alt="GitHub ロゴ" height={{ base: "28px", md: "32px" }} width="auto" />
+                <Link href={project.git} color="teal.500" isExternal fontWeight="semibold">
+                  {project.git}
+                </Link>
+              </HStack>
+            )}
+          </HStack>
         )}
         {pdf && (
           <Link href={pdf} color="teal.500" isExternal fontWeight="semibold">
@@ -170,28 +187,50 @@ export default async function ProjectDetailPage(props: any) {
                   </Box>
                 )}
                 {section.good && section.good.length > 0 && (
-                  <VStack spacing={8} align="stretch" mt={6}>
-                    {section.good.map((item) => (
-                      <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
-                        <Heading as="h3" size="md" mb={2} color="orange.600">
-                          {item.title}
+                  <Box mt={12}>
+                    <Box mb={6}>
+                      <HStack spacing={3} align="center">
+                        <Heading as="h3" size="lg" letterSpacing="wide" textTransform="uppercase" color="orange.500">
+                          Good
                         </Heading>
-                        <Text color="gray.700">{item.description}</Text>
-                      </Box>
-                    ))}
-                  </VStack>
+                        <Image src="/img/good.png" alt="成果ハイライト" boxSize={{ base: "40px", md: "48px" }} pointerEvents="none" />
+                      </HStack>
+                      <Box borderBottomWidth="3px" borderColor="gray.800" mt={2} />
+                    </Box>
+                    <VStack spacing={6} align="stretch">
+                      {section.good.map((item) => (
+                        <Box key={item.title} p={{ base: 6, md: 7 }} shadow="lg" borderWidth="1px" borderRadius="xl" bg="white">
+                          <Heading as="h4" size="md" mb={2} color="orange.600">
+                            {item.title}
+                          </Heading>
+                          <Text color="gray.700">{item.description}</Text>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
                 )}
                 {section.more && section.more.length > 0 && (
-                  <VStack spacing={8} align="stretch" mt={6}>
-                    {section.more.map((item) => (
-                      <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
-                        <Heading as="h3" size="md" mb={2} color="blue.600">
-                          {item.title}
+                  <Box mt={12}>
+                    <Box mb={6}>
+                      <HStack spacing={3} align="center">
+                        <Heading as="h3" size="lg" letterSpacing="wide" textTransform="uppercase" color="blue.500">
+                          More
                         </Heading>
-                        <Text color="gray.700">{item.description}</Text>
-                      </Box>
-                    ))}
-                  </VStack>
+                        <Image src="/img/more.png" alt="改善ポイント" boxSize={{ base: "40px", md: "48px" }} pointerEvents="none" />
+                      </HStack>
+                      <Box borderBottomWidth="3px" borderColor="gray.800" mt={2} />
+                    </Box>
+                    <VStack spacing={6} align="stretch">
+                      {section.more.map((item) => (
+                        <Box key={item.title} p={{ base: 6, md: 7 }} shadow="lg" borderWidth="1px" borderRadius="xl" bg="white">
+                          <Heading as="h4" size="md" mb={2} color="blue.600">
+                            {item.title}
+                          </Heading>
+                          <Text color="gray.700">{item.description}</Text>
+                        </Box>
+                      ))}
+                    </VStack>
+                  </Box>
                 )}
               </Box>
             ))}
