@@ -169,11 +169,23 @@ export default async function ProjectDetailPage(props: any) {
                     )}
                   </Box>
                 )}
+                {section.good && section.good.length > 0 && (
+                  <VStack spacing={8} align="stretch" mt={6}>
+                    {section.good.map((item) => (
+                      <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
+                        <Heading as="h3" size="md" mb={2} color="orange.600">
+                          {item.title}
+                        </Heading>
+                        <Text color="gray.700">{item.description}</Text>
+                      </Box>
+                    ))}
+                  </VStack>
+                )}
                 {section.more && section.more.length > 0 && (
                   <VStack spacing={8} align="stretch" mt={6}>
                     {section.more.map((item) => (
                       <Box key={item.title} p={6} shadow="lg" borderWidth="1px" borderRadius="lg" bg="white">
-                        <Heading as="h3" size="md" mb={2} color="orange.600">
+                        <Heading as="h3" size="md" mb={2} color="blue.600">
                           {item.title}
                         </Heading>
                         <Text color="gray.700">{item.description}</Text>

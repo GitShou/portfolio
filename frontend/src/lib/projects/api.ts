@@ -6,6 +6,7 @@ function cloneSections(sections: ProjectSection[]): ProjectSection[] {
     ...section,
     list: section.list ? [...section.list] : undefined,
     details: section.details ? section.details.map((detail) => ({ ...detail })) : undefined,
+    good: section.good ? section.good.map((item) => ({ ...item })) : undefined,
     more: section.more ? section.more.map((item) => ({ ...item })) : undefined,
   }));
 }

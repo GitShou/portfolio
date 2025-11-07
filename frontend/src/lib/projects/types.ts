@@ -3,7 +3,7 @@ export type ProjectSectionDetail = {
   body: string;
 };
 
-export type ProjectSectionMore = {
+export type ProjectSectionCard = {
   title: string;
   description: string;
 };
@@ -17,7 +17,8 @@ export type ProjectSection = {
   details?: ProjectSectionDetail[];
   image?: string;
   imgURL?: string;
-  more?: ProjectSectionMore[];
+  good?: ProjectSectionCard[];
+  more?: ProjectSectionCard[];
 };
 
 export type ProjectDetail = {
