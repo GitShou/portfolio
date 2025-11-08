@@ -31,6 +31,16 @@ phases:
     commands:
       - echo "Syncing static output to s3://${DEPLOY_S3_BUCKET}"
       - aws s3 sync out/ "s3://${DEPLOY_S3_BUCKET}" --delete
+      - echo "Creating aliases for directory index files"
+      - |
+        find out -type f -name "index.html" -print0 | while IFS= read -r -d '' file; do
+          key=${file#out/}
+          dirKey=${key%index.html}
+          if [ -n "$dirKey" ]; then
+            echo "Re-uploading ${dirKey} with text/html"
+            aws s3 cp "$file" "s3://${DEPLOY_S3_BUCKET}/${dirKey}" --content-type "text/html"
+          fi
+        done
       - echo "Ensuring extensionless HTML objects have text/html content-type"
       - |
         find out -type f ! -name "*.*" -print0 | while IFS= read -r -d '' file; do
