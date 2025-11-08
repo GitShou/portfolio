@@ -15,14 +15,6 @@ Parameters:
     Type: String
     Default: "portfolio5352-vwrw"
     Description: Lambda@Edge viewer-request 関数名（64文字以内を推奨）
-  WebAclArnParameterName:
-    Type: String
-    Default: "/portfolio/waf/arn"
-    Description: CloudFront WebACL ARN を登録する SSM パラメータ名
-  ViewerRequestFunctionVersionArnParameterName:
-    Type: String
-    Default: "/portfolio5352/cloudfront/viewer-request-function-version-arn"
-    Description: Lambda@Edge viewer-request 関数バージョンARNを登録する SSM パラメータ名
 
 Resources:
   CloudFrontWebACL:
@@ -81,7 +73,6 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
-
   ViewerRequestRewritePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -89,22 +80,11 @@ Resources:
       FunctionName: !Ref ViewerRequestRewriteFunctionVersion
       Principal: edgelambda.amazonaws.com
 
-  ViewerRequestRewriteFunctionVersionParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/cloudfront/viewer-request-function-version-arn"
-      Type: String
-      Value: !Ref ViewerRequestRewriteFunctionVersion
-      Description: !Sub "${ProjectName} CloudFront viewer-request Lambda@Edge version ARN"
-      Tags:
-        project: !Ref ProjectName
+Outputs:
+  WebACLArn:
+    Value: !GetAtt CloudFrontWebACL.Arn
+    Description: CloudFront用WAF WebACLのARN（CloudFrontのWebACLIdに指定）
 
-  WebAclArnParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Ref WebAclArnParameterName
-      Type: String
-      Value: !GetAtt CloudFrontWebACL.Arn
-      Description: !Sub "${ProjectName} CloudFront WebACL ARN"
-      Tags:
-        project: !Ref ProjectName
+  VRRFVersionParameterARN:
+    Value: !GetAtt ViewerRequestRewriteFunctionVersion.Arn
+    Description: CloudFront viewer-request Lambda@Edge関数バージョンARN
