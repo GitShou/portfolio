@@ -1,5 +1,16 @@
-import { copyFile, readdir } from "node:fs/promises";
+/// <reference types="node" />
+
+import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { join } from "node:path";
+
+function isEexistError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" && code.toUpperCase() === "EEXIST";
+}
 
 async function walk(directory: string): Promise<void> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -26,10 +37,20 @@ async function walk(directory: string): Promise<void> {
         await copyFile(absolutePath, destinationPath);
       } catch (error) {
         // 既にファイルが存在する場合などは無視して続行
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        if (!isEexistError(error)) {
           throw error;
         }
       }
+
+      const directoryName = entry.name.slice(0, -".html".length);
+      const directoryPath = join(directory, directoryName);
+      await mkdir(directoryPath, { recursive: true });
+      const indexPath = join(directoryPath, "index.html");
+      await copyFile(absolutePath, indexPath).catch((error) => {
+        if (!isEexistError(error)) {
+          throw error;
+        }
+      });
     })
   );
 }

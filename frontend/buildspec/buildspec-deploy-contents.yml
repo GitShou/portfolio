@@ -37,8 +37,9 @@ phases:
           key=${file#out/}
           dirKey=${key%index.html}
           if [ -n "$dirKey" ]; then
-            echo "Re-uploading ${dirKey} with text/html"
-            aws s3 cp "$file" "s3://${DEPLOY_S3_BUCKET}/${dirKey}" --content-type "text/html"
+            normalizedKey=${dirKey%/}/
+            echo "Publishing alias ${normalizedKey} with text/html"
+            aws s3api put-object --bucket "$DEPLOY_S3_BUCKET" --key "${normalizedKey}" --body "$file" --content-type "text/html"
           fi
         done
       - echo "Ensuring extensionless HTML objects have text/html content-type"

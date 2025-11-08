@@ -219,7 +219,7 @@ export default async function ProjectDetailPage(props: any) {
                 <Box mb={6}>
                   <HStack spacing={3} align="center">
                     <Heading as="h3" size="lg" letterSpacing="wide" textTransform="uppercase" color="orange.500">
-                      Good
+                      Point
                     </Heading>
                     <Image src="/img/good.png" alt="成果ハイライト" boxSize={{ base: "40px", md: "48px" }} pointerEvents="none" />
                   </HStack>
