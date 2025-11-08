@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build-local": "cross-env STAGE=LOCAL npm run build",
     "postbuild": "tsx scripts/prepare-static-paths.ts",
     "start": "next start",
     "lint": "eslint",
@@ -36,6 +37,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^7.0.3",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
     "json-server": "^1.0.0-beta.3",
