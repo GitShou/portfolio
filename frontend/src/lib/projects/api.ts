@@ -26,24 +26,6 @@ function cloneProject(project: Project): Project {
   };
 }
 
-const stage = (process.env.STAGE ?? process.env.NEXT_PUBLIC_STAGE ?? "").trim().toLowerCase();
-const IS_LOCAL_STAGE = stage === "local";
-
-let cachedLocalProjects: Project[] | null = null;
-
-async function loadLocalProjects(): Promise<Project[]> {
-  if (!cachedLocalProjects) {
-    const { PROJECTS_DATA } = (await import(
-      "../../../../infrastructure/ap-northeast-1/data/ProjectData"
-    )) as { PROJECTS_DATA: Project[] };
-
-    const rawProjects = PROJECTS_DATA ?? [];
-    cachedLocalProjects = rawProjects.map((project) => cloneProject(project));
-  }
-
-  return cachedLocalProjects.map((project) => cloneProject(project));
-}
-
 function parseProjectsPayload(payload: unknown): Project[] | null {
   if (!payload) {
     return null;
@@ -203,10 +185,6 @@ async function invokeApi(endpoint: string, init: RequestInit): Promise<Response>
 }
 
 export async function fetchProjects(): Promise<Project[]> {
-  if (IS_LOCAL_STAGE) {
-    return loadLocalProjects();
-  }
-
   const endpoint = `${resolveBaseUrl()}/projects`;
   const response = await invokeApi(endpoint, {
     cache: "force-cache",
@@ -230,12 +208,6 @@ export async function fetchProjects(): Promise<Project[]> {
 
 export async function fetchProjectById(id: string | number): Promise<Project | null> {
   const stringId = String(id);
-
-  if (IS_LOCAL_STAGE) {
-    const projects = await loadLocalProjects();
-    const match = projects.find((project) => String(project.id) === stringId);
-    return match ? cloneProject(match) : null;
-  }
 
   const endpoint = `${resolveBaseUrl()}/projects/${encodeURIComponent(stringId)}`;
   const response = await invokeApi(endpoint, {
