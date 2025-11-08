@@ -32,16 +32,6 @@ async function walk(directory: string): Promise<void> {
         return;
       }
 
-      const destinationPath = join(directory, entry.name.slice(0, -".html".length));
-      try {
-        await copyFile(absolutePath, destinationPath);
-      } catch (error) {
-        // 既にファイルが存在する場合などは無視して続行
-        if (!isEexistError(error)) {
-          throw error;
-        }
-      }
-
       const directoryName = entry.name.slice(0, -".html".length);
       const directoryPath = join(directory, directoryName);
       await mkdir(directoryPath, { recursive: true });

@@ -11,6 +11,10 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: SSMパラメータストアに格納されたCloudFront用WAF WebACLのARN
     Default: "/portfolio/waf/arn"
+  ViewerRequestFunctionVersionArnParameter:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: viewer-request Lambda@Edge 関数バージョンARNを格納したSSMパラメータ
+    Default: "/portfolio5352/cloudfront/viewer-request-function-version-arn"
 
 Resources:
   StaticSiteBucket:
@@ -50,6 +54,10 @@ Resources:
             - GET
             - HEAD
           Compress: true
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              IncludeBody: false
+              LambdaFunctionARN: !Ref ViewerRequestFunctionVersionArnParameter
           ForwardedValues:
             QueryString: false
             Cookies:
