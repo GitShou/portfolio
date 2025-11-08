@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - pip install --upgrade awscli
+
+  build:
+    commands:
+      - cd infrastructure/us-east-1
+      - pwd
+      - aws cloudformation package --template-file templates/CloudFrontWafWebAcl.yml --output-template-file templates/CloudFrontWafWebAcl.packaged.yml --s3-bucket portfolio-build-bucket-5352-us-east-1 --force-upload
+      - ls -la templates
+
+artifacts:
+  files:
+    - infrastructure/us-east-1/templates/CloudFrontWafWebAcl.yml
+    - infrastructure/us-east-1/templates/CloudFrontWafWebAcl.packaged.yml
+  discard-paths: 'yes'
