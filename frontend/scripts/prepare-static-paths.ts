@@ -1,4 +1,4 @@
-import { copyFile, readdir } from "node:fs/promises";
+import { copyFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 async function walk(directory: string): Promise<void> {
@@ -22,11 +22,16 @@ async function walk(directory: string): Promise<void> {
       }
 
       const destinationPath = join(directory, entry.name.slice(0, -".html".length));
+      const existing = await stat(destinationPath).catch(() => null);
+      if (existing) {
+        return;
+      }
       try {
         await copyFile(absolutePath, destinationPath);
       } catch (error) {
         // 既にファイルが存在する場合などは無視して続行
-        if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+        const code = (error as NodeJS.ErrnoException).code;
+        if (code !== "EEXIST" && code !== "EISDIR") {
           throw error;
         }
       }

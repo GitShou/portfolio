@@ -103,7 +103,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             <Text mb={6} color="gray.600" fontSize="sm">
               アーキテクチャ図と実装の詳細、得られた知見はプロジェクトページにまとめています。ぜひご覧ください。
             </Text>
-            <Button as={Link} href="/projects/1" colorScheme="teal" variant="solid">
+            <Button as={Link} href="/projects/1/" colorScheme="teal" variant="solid">
               プロジェクト詳細を見る
             </Button>
           </Box>
