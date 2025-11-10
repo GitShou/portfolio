@@ -11,6 +11,10 @@ Parameters:
     Type: String
     Default: "portfolio5352"
     Description: プロジェクト名（リソース名のプレフィックス）
+  ViewerRequestFunctionName:
+    Type: String
+    Default: "portfolio5352-vwrw"
+    Description: Lambda@Edge viewer-request 関数名（64文字以内を推奨）
 
 Resources:
   CloudFrontWebACL:
@@ -32,19 +36,24 @@ Resources:
   ViewerRequestRewriteFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${ProjectName}-viewer-request-rewrite"
+      FunctionName: !Ref ViewerRequestFunctionName
       Description: CloudFront viewer-request Lambda@Edge function that rewrites clean URLs to index.html
       CodeUri: ../Lambda/src/cloudfront-viewer-request/
       Handler: index.handler
       Runtime: nodejs18.x
       MemorySize: 128
       Timeout: 5
-      AutoPublishAlias: live
       Role: !GetAtt ViewerRequestRewriteFunctionRole.Arn
-      DeploymentPreference:
-        Enabled: false
       Tags:
         project: !Ref ProjectName
+
+  ViewerRequestRewriteFunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref ViewerRequestRewriteFunction
+      Description: !Sub "${ProjectName} viewer-request rewrite deployed version"
+    DependsOn:
+      - ViewerRequestRewriteFunction
 
   ViewerRequestRewriteFunctionRole:
     Type: AWS::IAM::Role
@@ -71,21 +80,11 @@ Resources:
       FunctionName: !Ref ViewerRequestRewriteFunctionVersion
       Principal: edgelambda.amazonaws.com
 
-  ViewerRequestRewriteFunctionVersionParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/cloudfront/viewer-request-function-version-arn"
-      Type: String
-      Value: !Ref ViewerRequestRewriteFunctionVersion
-      Description: !Sub "${ProjectName} CloudFront viewer-request Lambda@Edge version ARN"
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-
 Outputs:
   WebACLArn:
     Value: !GetAtt CloudFrontWebACL.Arn
     Description: CloudFront用WAF WebACLのARN（CloudFrontのWebACLIdに指定）
-  ViewerRequestFunctionVersionArn:
-    Value: !Ref ViewerRequestRewriteFunctionVersion
-    Description: CloudFront viewer-request Lambda@Edge version ARN
+
+  VRRFVersionParameterARN:
+    Value: !GetAtt ViewerRequestRewriteFunctionVersion.Arn
+    Description: CloudFront viewer-request Lambda@Edge関数バージョンARN

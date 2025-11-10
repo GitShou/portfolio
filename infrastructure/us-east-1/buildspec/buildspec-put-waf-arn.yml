@@ -36,6 +36,24 @@ phases:
           --overwrite
         echo "WAF ARNをSSM Parameter Storeに格納しました: $WAF_ARN"
         
+        
+      - echo "=== LambdaARNをDeployOutput/output.jsonから取得しSSMに格納 ==="
+      - |
+        VRRF_ARN=$(jq -r '.VRRFVersionParameterARN' ../01/output.json)
+        if [ -z "$VRRF_ARN" ]; then
+          echo "VRRF ARNが../01/output.jsonから取得できませんでした。" >&2
+          exit 1
+        fi
+        echo "取得したVRRF ARN: $VRRF_ARN"
+        # SSM Parameter Storeに格納（overwrite有効）
+        aws ssm put-parameter \
+          --region ap-northeast-1 \
+          --name "/portfolio/ViewerRequestRewriteFunctionVersion/arn" \
+          --type String \
+          --value "$VRRF_ARN" \
+          --overwrite
+        echo "VRRF ARNをSSM Parameter Storeに格納しました: $VRRF_ARN"
+
       # EventBridgeでap-northeast-1に通知
       - echo "=== ap-northeast-1へEventBridgeイベント通知 ==="
       - |
