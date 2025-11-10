@@ -33,6 +33,24 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
+  ViewerRequestRewriteFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
   ViewerRequestRewriteFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -54,24 +72,6 @@ Resources:
       Description: !Sub "${ProjectName} viewer-request rewrite deployed version"
     DependsOn:
       - ViewerRequestRewriteFunction
-
-  ViewerRequestRewriteFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-                - edgelambda.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
 
   ViewerRequestRewritePermission:
     Type: AWS::Lambda::Permission
