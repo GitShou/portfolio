@@ -1,15 +1,19 @@
 /// <reference types="node" />
-
-import { copyFile, mkdir, readdir } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 
-function isEexistError(error: unknown): boolean {
-  if (!error || typeof error !== "object") {
-    return false;
+async function ensureDirectory(directoryPath: string): Promise<void> {
+  const existing = await stat(directoryPath).catch(() => null);
+
+  if (existing?.isDirectory()) {
+    return;
   }
 
-  const code = Reflect.get(error, "code");
-  return typeof code === "string" && code.toUpperCase() === "EEXIST";
+  if (existing) {
+    await rm(directoryPath, { recursive: true, force: true });
+  }
+
+  await mkdir(directoryPath, { recursive: true });
 }
 
 async function walk(directory: string): Promise<void> {
@@ -34,13 +38,10 @@ async function walk(directory: string): Promise<void> {
 
       const directoryName = entry.name.slice(0, -".html".length);
       const directoryPath = join(directory, directoryName);
-      await mkdir(directoryPath, { recursive: true });
+      await ensureDirectory(directoryPath);
       const indexPath = join(directoryPath, "index.html");
-      await copyFile(absolutePath, indexPath).catch((error) => {
-        if (!isEexistError(error)) {
-          throw error;
-        }
-      });
+      await copyFile(absolutePath, indexPath);
+      await rm(absolutePath);
     })
   );
 }

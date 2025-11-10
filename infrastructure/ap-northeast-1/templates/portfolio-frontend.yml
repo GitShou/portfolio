@@ -40,7 +40,7 @@ Resources:
         WebACLId: !Ref WebAclArnParameterName
         Origins:
           - Id: S3Origin
-            DomainName: !GetAtt StaticSiteBucket.DomainName
+            DomainName: !GetAtt StaticSiteBucket.RegionalDomainName
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
         DefaultCacheBehavior:
