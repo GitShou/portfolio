@@ -24,5 +24,11 @@ export const handler = async (event) => {
   }
 
   request.uri = ensureTrailingIndex(request.uri);
-  return request;
+  console.log(
+    JSON.stringify({
+      message: "viewer-request rewrite invoked",
+      uri: request.uri,
+    })
+  );
+  throw new Error("debug");
 };
