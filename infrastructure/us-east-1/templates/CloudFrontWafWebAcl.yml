@@ -69,10 +69,12 @@ Resources:
     Type: AWS::Lambda::Version
     Properties:
       FunctionName: !Ref ViewerRequestRewriteFunction
-      Description: !Sub "${ProjectName} viewer-request rewrite deployed version"
+      Description: !Sub "${ProjectName} viewer-request auto-versioned"
+      # CodeSha256を指定することで、コード変更時に自動的に新バージョンが作成される
+      CodeSha256: !GetAtt ViewerRequestRewriteFunction.CodeSha256
     DependsOn:
       - ViewerRequestRewriteFunction
-
+      
   ViewerRequestRewritePermission:
     Type: AWS::Lambda::Permission
     Properties:
