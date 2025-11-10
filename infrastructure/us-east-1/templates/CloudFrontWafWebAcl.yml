@@ -62,22 +62,15 @@ Resources:
       MemorySize: 128
       Timeout: 5
       Role: !GetAtt ViewerRequestRewriteFunctionRole.Arn
+      AutoPublishAlias: live
       Tags:
         project: !Ref ProjectName
 
-  ViewerRequestRewriteFunctionVersion:
-    Type: AWS::Lambda::Version
-    Properties:
-      FunctionName: !Ref ViewerRequestRewriteFunction
-      Description: !Sub "${ProjectName} viewer-request auto-versioned ${AWS::StackName}-${AWS::Region}"
-    DependsOn:
-      - ViewerRequestRewriteFunction
-      
   ViewerRequestRewritePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      Action: lambda:GetFunction
-      FunctionName: !Ref ViewerRequestRewriteFunctionVersion
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ViewerRequestRewriteFunction.Version
       Principal: edgelambda.amazonaws.com
 
 Outputs:
@@ -86,5 +79,5 @@ Outputs:
     Description: CloudFront用WAF WebACLのARN（CloudFrontのWebACLIdに指定）
 
   VRRFVersionParameterARN:
-    Value: !Ref ViewerRequestRewriteFunctionVersion
+    Value: !Ref ViewerRequestRewriteFunction.Version
     Description: CloudFront viewer-request Lambda@Edge関数バージョンARN
