@@ -16,6 +16,14 @@ const ensureTrailingIndex = (uri) => {
 };
 
 export const handler = async (event) => {
+
+  console.log(
+    JSON.stringify({
+      message: "viewer-request rewrite invoked",
+      uri: request.uri,
+    })
+  );
+
   const record = event?.Records?.[0];
   const request = record?.cf?.request;
 
@@ -24,11 +32,7 @@ export const handler = async (event) => {
   }
 
   request.uri = ensureTrailingIndex(request.uri);
-  console.log(
-    JSON.stringify({
-      message: "viewer-request rewrite invoked",
-      uri: request.uri,
-    })
-  );
-  throw new Error("debug");
+
+  // throw new Error("debug");
+  return request;
 };
