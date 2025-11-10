@@ -9,12 +9,12 @@ Parameters:
     Default: "portfolio5352"
   WebAclArnParameterName:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: CloudFront用WAF WebACLのARNを格納したSSMパラメータ名
+    Description: CloudFront用WAF WebACLのARNを格納したSSMパラメータ
     Default: "/portfolio/waf/arn"
   ViewerRequestFunctionVersionArnParameterName:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: viewer-request Lambda@Edge 関数バージョンARNを格納したSSMパラメータ名
-    Default: "/portfolio5352/cloudfront/viewer-request-function-version-arn"
+    Description: viewer-request Lambda@Edge 関数バージョンARNを格納したSSMパラメータ
+    Default: "/portfolio/ViewerRequestRewriteFunctionVersion/arn"
 
 Resources:
   StaticSiteBucket:
@@ -37,7 +37,7 @@ Resources:
       DistributionConfig:
         Enabled: true
         DefaultRootObject: index.html
-        WebACLId: !Sub "{{resolve:ssm:${WebAclArnParameterName}}}"
+        WebACLId: !Ref WebAclArnParameterName
         Origins:
           - Id: S3Origin
             DomainName: !GetAtt StaticSiteBucket.DomainName
@@ -57,7 +57,7 @@ Resources:
           LambdaFunctionAssociations:
             - EventType: viewer-request
               IncludeBody: false
-              LambdaFunctionARN: !Sub "{{resolve:ssm:${ViewerRequestFunctionVersionArnParameterName}}}"
+              LambdaFunctionARN: !Ref ViewerRequestFunctionVersionArnParameterName
           ForwardedValues:
             QueryString: false
             Cookies:
