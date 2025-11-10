@@ -86,5 +86,5 @@ Outputs:
     Description: CloudFront用WAF WebACLのARN（CloudFrontのWebACLIdに指定）
 
   VRRFVersionParameterARN:
-    Value: !GetAtt ViewerRequestRewriteFunctionVersion.Arn
+    Value: !Ref ViewerRequestRewriteFunctionVersion
     Description: CloudFront viewer-request Lambda@Edge関数バージョンARN
