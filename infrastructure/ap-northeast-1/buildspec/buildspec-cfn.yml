@@ -20,9 +20,14 @@ phases:
 
   post_build:
     commands:
-      - cd ../../ # go back to root directory
-      - cp frontend/buildspec/buildspec-nextjs.yml frontend/buildspec-nextjs.yml
-      - pwd
+      - cd ../../frontend 
+      - npm install
+      - npm run generate:projects
+
+      - cp buildspec/buildspec-nextjs.yml ./buildspec-nextjs.yml
+      - cd ../
+
+      - pwd # root directory
 
 artifacts:
   secondary-artifacts:
@@ -37,6 +42,8 @@ artifacts:
       base-directory: frontend
       files:
         - '**/*'
+      exclude-paths:
+        - 'node_modules/**'
       name: WebArtifact
 
     DataArtifact:

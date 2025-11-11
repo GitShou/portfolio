@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "export": "next export",
-    "mock:api": "npm run generate:projects && json-server --watch mocks/projects.json --port 4000",
+    "mock:api": "json-server --watch mocks/projects.json --port 4000",
     "generate:projects": "tsx scripts/generate-projects-json.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
