@@ -194,12 +194,16 @@ export async function fetchProjects(): Promise<Project[]> {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`[StaticExport] Projects API 呼び出しに失敗しました: ${message}`);
+    throw new Error(
+      `[StaticExport] Projects API 呼び出しに失敗しました: ${message} (endpoint: ${endpoint})`
+    );
   }
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Failed to fetch projects. Status: ${response.status}. Body: ${body}`);
+    throw new Error(
+      `Failed to fetch projects. Status: ${response.status}. Body: ${body}. (endpoint: ${endpoint})`
+    );
   }
 
   const payload = await response.json();
@@ -224,18 +228,20 @@ export async function fetchProjectById(id: string | number): Promise<Project | n
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `[StaticExport] Projects API (id=${stringId}) の呼び出しに失敗しました: ${message}`
+      `[StaticExport] Projects API (id=${stringId}) の呼び出しに失敗しました: ${message} (endpoint: ${endpoint})`
     );
   }
 
   if (response.status === 404) {
-    throw new Error(`[StaticExport] Projects API (id=${stringId}) が 404 を返しました`);
+    throw new Error(
+      `[StaticExport] Projects API (id=${stringId}) が 404 を返しました (endpoint: ${endpoint})`
+    );
   }
 
   if (!response.ok) {
     const body = await response.text();
     throw new Error(
-      `Failed to fetch project detail. Status: ${response.status}. Body: ${body}`
+      `Failed to fetch project detail. Status: ${response.status}. Body: ${body}. (endpoint: ${endpoint})`
     );
   }
 
