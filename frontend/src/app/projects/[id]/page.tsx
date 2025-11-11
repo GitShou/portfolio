@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import {
   Container,
   Box,
@@ -33,7 +32,13 @@ export default async function ProjectDetailPage(props: any) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
   const project: Project | null = await fetchProjectById(id);
-  if (!project || !project.detail) return notFound();
+  if (!project) {
+    throw new Error(`[StaticExport] Projects API に id=${id} のデータが存在しません`);
+  }
+
+  if (!project.detail) {
+    throw new Error(`[StaticExport] id=${id} の詳細情報(detail) が未設定です`);
+  }
   const { sections, role, pdf } = project.detail;
 
   const sectionEntries = sections.map((section, index) => {

@@ -186,10 +186,16 @@ async function invokeApi(endpoint: string, init: RequestInit): Promise<Response>
 
 export async function fetchProjects(): Promise<Project[]> {
   const endpoint = `${resolveBaseUrl()}/projects`;
-  const response = await invokeApi(endpoint, {
-    cache: "force-cache",
-    // 明示的に静的生成対象とするために revalidate 指定を避ける
-  });
+  let response: Response;
+  try {
+    response = await invokeApi(endpoint, {
+      cache: "force-cache",
+      // 明示的に静的生成対象とするために revalidate 指定を避ける
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[StaticExport] Projects API 呼び出しに失敗しました: ${message}`);
+  }
 
   if (!response.ok) {
     const body = await response.text();
@@ -210,17 +216,27 @@ export async function fetchProjectById(id: string | number): Promise<Project | n
   const stringId = String(id);
 
   const endpoint = `${resolveBaseUrl()}/projects/${encodeURIComponent(stringId)}`;
-  const response = await invokeApi(endpoint, {
-    cache: "force-cache",
-  });
+  let response: Response;
+  try {
+    response = await invokeApi(endpoint, {
+      cache: "force-cache",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `[StaticExport] Projects API (id=${stringId}) の呼び出しに失敗しました: ${message}`
+    );
+  }
 
   if (response.status === 404) {
-    return null;
+    throw new Error(`[StaticExport] Projects API (id=${stringId}) が 404 を返しました`);
   }
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Failed to fetch project detail. Status: ${response.status}. Body: ${body}`);
+    throw new Error(
+      `Failed to fetch project detail. Status: ${response.status}. Body: ${body}`
+    );
   }
 
   const payload = await response.json();
