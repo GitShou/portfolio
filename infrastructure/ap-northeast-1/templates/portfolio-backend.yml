@@ -251,6 +251,20 @@ Resources:
             Method: post
             RestApiId: !Ref ProjectApi
 
+  GetProjectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../Lambda/src/get-project/
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        GetProject:
+          Type: Api
+          Properties:
+            Path: /projects/{id}
+            Method: get
+            RestApiId: !Ref ProjectApi
+
   UpdateProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
