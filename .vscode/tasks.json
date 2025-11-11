@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "mock:api",
+			"path": "frontend",
+			"problemMatcher": [],
+			"label": "npm: mock:api - frontend",
+			"detail": "npm run generate:projects && json-server --watch mocks/projects.json --port 4000"
+		},
+		{
+			"type": "npm",
+			"script": "dev",
+			"path": "frontend",
+			"problemMatcher": [],
+			"label": "npm: dev - frontend",
+			"detail": "next dev"
+		},
+		{
+			"label": "start:all",
+			"dependsOn": [
+				"npm: mock:api - frontend",
+				"npm: dev - frontend"
+			],
+			"dependsOrder": "parallel",
+			"problemMatcher": []
+		}
+	]
+}
