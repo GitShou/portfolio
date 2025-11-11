@@ -150,6 +150,8 @@ Resources:
                 Resource:
                   - !GetAtt ProjectTable.Arn
                   - !Sub "${ProjectTable.Arn}/index/*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Tags:
         - Key: project
           Value: !Ref ProjectName
