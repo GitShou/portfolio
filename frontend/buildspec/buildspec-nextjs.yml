@@ -25,7 +25,7 @@ phases:
         PROJECTS_API_BASE_URL=${PROJECTS_API_BASE_URL}
         EOF
       - echo "Running Playwright end-to-end smoke tests"
-      - CI=1 npm run test:e2e
+      - npm run test:e2e
       - echo "Running Next.js production build"
       - npm run build
   post_build:

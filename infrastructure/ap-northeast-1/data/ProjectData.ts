@@ -127,7 +127,7 @@ export const PROJECTS_DATA: Project[] = [
             },
             {
               title: "システムの監視機構の強化",
-              description:"CloudWatch Canaryなどのシステムの監視を強化する。"
+              description:"CloudWatch Canaryなどによるフロントエンドの監視や、Lambda等を使ったインテグレーションテストによるバックエンドの強化が必要。"
             }
           ]
         },

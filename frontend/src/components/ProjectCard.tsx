@@ -70,7 +70,7 @@ const ProjectCard = ({ project }: ProjectProps) => {
                 {/* 詳細ページへのボタンを表示（detailが存在する場合のみ） */}
                 {project.hasOwnProperty("detail") && project.detail ? (
                     <Box mt={4}>
-                        <Link href={`/projects/${project.id}`}>
+                        <Link href={`/projects/${project.id}`} data-testid={`project-detail-link`}>
                             <Button colorScheme="teal" size="sm">
                                 詳細を見る
                             </Button>
