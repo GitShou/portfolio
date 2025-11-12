@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  CodePipeline definition for the us-east-1 portfolio auxiliary deployment.
+  Generated from the pipeline export on 2025-11-10. Assumes existing CodeBuild
+  projects, IAM roles, and CodeStar connection resources.
+
+Parameters:
+  PipelineName:
+    Type: String
+    Default: Portfolio-pipeline
+    Description: Name of the pipeline.
+  ArtifactBucketName:
+    Type: String
+    Description: S3 bucket name used by CodePipeline to store artifacts.
+  CodePipelineServiceRoleArn:
+    Type: String
+    Description: IAM role ARN assumed by the pipeline.
+  CodeStarConnectionArn:
+    Type: String
+    Description: CodeStar Connections ARN for the GitHub repository.
+  RepositoryId:
+    Type: String
+    Default: GitShou/portfolio
+    Description: GitHub repository in the form owner/repo.
+  BranchName:
+    Type: String
+    Default: main
+    Description: Git branch to track.
+  CodeBuildProjectName:
+    Type: String
+    Default: Portfolio-build
+    Description: CodeBuild project used in all build actions.
+  CloudFormationDeploymentRoleArn:
+    Type: String
+    Description: IAM role ARN assumed by CloudFormation deploy actions.
+  DeploymentStackName:
+    Type: String
+    Default: portfolio-stack
+    Description: CloudFormation stack name deployed in this region.
+
+Resources:
+  PortfolioRegionalPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref PipelineName
+      RoleArn: !Ref CodePipelineServiceRoleArn
+      PipelineType: V2
+      ExecutionMode: QUEUED
+      ArtifactStore:
+        Type: S3
+        Location: !Ref ArtifactBucketName
+      Triggers:
+        - ProviderType: CodeStarSourceConnection
+          GitConfiguration:
+            SourceActionName: Source
+            Push:
+              - Branches:
+                  Includes:
+                    - !Ref BranchName
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              Namespace: SourceVariables
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                BranchName: !Ref BranchName
+                ConnectionArn: !Ref CodeStarConnectionArn
+                DetectChanges: "true"
+                FullRepositoryId: !Ref RepositoryId
+                OutputArtifactFormat: CODE_ZIP
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: Build
+              Namespace: BuildVariables
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifact
+              Configuration:
+                ProjectName: !Ref CodeBuildProjectName
+                BuildspecOverride: infrastructure/us-east-1/buildspec/packaging-template.yml
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              Namespace: DeployVariables
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: BuildArtifact
+              OutputArtifacts:
+                - Name: DeployOutput
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+                OutputFileName: output.json
+                RoleArn: !Ref CloudFormationDeploymentRoleArn
+                StackName: !Ref DeploymentStackName
+                TemplatePath: BuildArtifact::CloudFrontWafWebAcl.packaged.yml
+              RunOrder: 1
+        - Name: notify
+          Actions:
+            - Name: notify
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+                - Name: DeployOutput
+              Configuration:
+                ProjectName: !Ref CodeBuildProjectName
+                BuildspecOverride: infrastructure/us-east-1/buildspec/buildspec-put-waf-arn.yml
+                PrimarySource: SourceArtifact
+              RunOrder: 1
