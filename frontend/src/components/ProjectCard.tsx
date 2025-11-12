@@ -11,66 +11,86 @@ interface ProjectProps {
     project: Project;
 }
 
+const CARD_HEIGHTS = {
+    regular: "550px",
+    compact: "360px",
+} as const;
+
 const ProjectCard = ({ project }: ProjectProps) => {
+    const cardSize = project.cardSize === "compact" ? "compact" : "regular";
+    const visibleTechStack = project.techStack.filter(
+        (tech) => Boolean(tech.icon && tech.icon.trim() !== "")
+    );
+
     return (
-        <Card p={5} shadow="md" borderWidth="1px" borderRadius="lg">
-            <CardHeader>
-                <Heading size="md" mb={2}>{project.title}</Heading>
+        <Card
+            p={5}
+            shadow="md"
+            borderWidth="1px"
+            borderRadius="lg"
+            height={{ base: "auto", md: CARD_HEIGHTS[cardSize] }}
+            display="flex"
+            flexDirection="column"
+            data-card-size={cardSize}
+        >
+                    <CardHeader pb={2}>
+                        <Heading size="md" mb={2}>
+                    {project.title}
+                </Heading>
             </CardHeader>
-            <CardBody>
-                <Text fontSize="sm" whiteSpace="pre-line">{project.summary}</Text>
-                {/* 技術スタックの表示を追加 */}
-                <Box mt={3}>
-                    <Text fontSize="xs" color="gray.500" fontWeight="bold">Tech Stack:</Text>
-                    {/* 1行3個まで表示、幅を小さく・中央寄せ */}
-                    <SimpleGrid columns={3} spacing={1} mt={2} justifyItems="center">
-                        {project.techStack.map((tech) => (
-                            <Tag
-                                key={tech.name}
-                                colorScheme="white"
-                                variant="solid"
-                                px={1}
-                                py={1}
-                                minW="56px"
-                                minH="56px"
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                fontWeight="bold"
-                                fontSize="sm"
-                                borderRadius="md"
-                                bg="white"
-                            >
-                                {tech.icon && tech.icon.trim() !== "" ? (
-                                    <Box
-                                        bg="white"
-                                        borderRadius="full"
-                                        display="flex"
-                                        alignItems="center"
-                                        justifyContent="center"
-                                        minW="48px"
-                                        minH="48px"
-                                    >
-                                        <Image
-                                            src={tech.icon}
-                                            alt={tech.name}
-                                            boxSize="48px"
-                                            borderRadius="full"
-                                            display="inline-block"
-                                            mr={0}
+            <CardBody display="flex" flexDirection="column" gap={3} flex="1">
+                <Text fontSize="sm" whiteSpace="pre-line" flex="1">
+                    {project.summary}
+                </Text>
+                        {visibleTechStack.length > 0 ? (
+                            <Box>
+                                <Text fontSize="xs" color="gray.500" fontWeight="bold">
+                                    Tech Stack:
+                                </Text>
+                                <SimpleGrid columns={3} spacing={1} mt={2} justifyItems="center">
+                                    {visibleTechStack.map((tech) => (
+                                        <Tag
+                                            key={tech.name}
+                                            colorScheme="white"
+                                            variant="solid"
+                                            px={1}
+                                            py={1}
+                                            minW="56px"
+                                            minH="56px"
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            fontWeight="bold"
+                                            fontSize="sm"
+                                            borderRadius="md"
                                             bg="white"
-                                        />
-                                    </Box>
-                                ) : null}
-                                {/* サービス名は表示しない */}
-                            </Tag>
-                        ))}
-                    </SimpleGrid>
-                </Box>
-                {/* 詳細ページへのボタンを表示（detailが存在する場合のみ） */}
+                                        >
+                                            <Box
+                                                bg="white"
+                                                borderRadius="full"
+                                                display="flex"
+                                                alignItems="center"
+                                                justifyContent="center"
+                                                minW="48px"
+                                                minH="48px"
+                                            >
+                                                <Image
+                                                    src={tech.icon}
+                                                    alt={tech.name}
+                                                    boxSize="48px"
+                                                    borderRadius="full"
+                                                    display="inline-block"
+                                                    bg="white"
+                                                />
+                                            </Box>
+                                        </Tag>
+                                    ))}
+                                </SimpleGrid>
+                            </Box>
+                        ) : null}
                 {project.hasOwnProperty("detail") && project.detail ? (
-                    <Box mt={4}>
-                        <Link href={`/projects/${project.id}`} data-testid={`project-detail-link`}>
+                    <Box mt="auto">
+                        <Link href={`/projects/${project.id}`} data-testid="project-detail-link">
                             <Button colorScheme="teal" size="sm">
                                 詳細を見る
                             </Button>
@@ -78,7 +98,8 @@ const ProjectCard = ({ project }: ProjectProps) => {
                     </Box>
                 ) : null}
             </CardBody>
-        </Card>);
+        </Card>
+    );
 };
 
 export default ProjectCard;

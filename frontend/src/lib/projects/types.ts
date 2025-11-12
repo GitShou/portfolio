@@ -52,4 +52,5 @@ export type Project = {
   type?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  cardSize?: "regular" | "compact";
 };

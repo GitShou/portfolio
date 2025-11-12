@@ -97,8 +97,8 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
               技術ポートフォリオサイト開発の舞台裏
             </Heading>
             <Text mb={4} color="gray.700" fontSize="sm">
-              このサイトは Next.js と Chakra UI、AWS サーバーレス基盤を活用したフルマネージド構成で構築しています。
-              CloudFront や API Gateway、Lambda、DynamoDB を組み合わせ、CI/CD まで自動化したアーキテクチャを採用しています。
+              このサイトは私の現時点での技術力を端的に証明するために、AWS サーバーレス基盤を活用したフルマネージド構成で構築しています。
+              自動化を最優先した作りになっており、デプロイの際に手動での介入を一切排除しています。
             </Text>
             <Text mb={6} color="gray.600" fontSize="sm">
               アーキテクチャ図と実装の詳細、得られた知見はプロジェクトページにまとめています。ぜひご覧ください。
@@ -198,19 +198,19 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             {[
               {
                 title: "強力な自走力と探求力",
-                body: "問題が発生してもその原因と最適な解決策を粘り強く追及し、成果物に反映させます。"
+                body: "本Webページをフルスタックでシステムを一人で開発し、未知の技術や課題に対しても自ら学び、最適な解決策をAIなどの技術も駆使しながら一人で模索しました。"
               },
               {
                 title: "未知領域への適応力",
                 body: "未経験分野でも積極的に探究し、その場限りの理解で済ませず、応用します。"
               },
               {
-                title: "知見共有と教育設計",
-                body: "登壇や資料化を通じて複雑なサーバーレス構成を分かりやすく伝え、組織全体に展開することを惜しみません。"
-              },
-              {
                 title: "自身の領域だけに留まらない広い視野",
                 body: "システムの構造を俯瞰的に捉え、専門外の領域に関する技術でも積極的に学び、最適な構造を見出します。"
+              },
+              {
+                title: "知見共有と教育設計",
+                body: "登壇や資料化を通じて複雑なサーバーレス構成を分かりやすく伝え、組織全体に展開することを惜しみません。"
               }
             ].map((highlight) => (
               <Box key={highlight.title} bg="gray.50" borderRadius="lg" p={5} borderWidth="1px" borderColor="gray.100" boxShadow="xs">

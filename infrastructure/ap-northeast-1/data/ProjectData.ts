@@ -41,6 +41,7 @@ export type Project = {
   git?: string;
   techStack: ProjectTechStack[];
   detail?: ProjectDetail;
+  cardSize?: "regular" | "compact";
 };
 
 export const PROJECTS_DATA: Project[] = [
@@ -61,6 +62,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "TypeScript", icon: "" },
       { name: "Chakra UI", icon: "" }
     ],
+    cardSize: "regular",
     detail: {
       type: "portfolio",
       role: "フルスタックエンジニア / アーキテクト / クラウドネイティブ開発者",
@@ -145,6 +147,10 @@ export const PROJECTS_DATA: Project[] = [
               description:"今回使用したモデルはGpt-5 Codexだったが、このモデルの場合はシステムの改善の際に構造の見直しをすることはほとんどなく、既存の構造を踏襲したうえで目的を実現しようとする。\nAIの実装速度を考えるともったいないので、人間が適切に指示を出したり、全体の構造設計を担うことが重要であると感じた。"
             },
             {
+              title: "特性に合ったAIを組み合わせる",
+              description: "今回のプロジェクトではGpt-5 CodexをメインのAIとして採用したが、AWSの仕様となる部分や細かいレベルになるとハレーションもそれなりに発生した。\nそのため、Amazon Qを導入し、より専門的な知識を持つAIを組み合わせることで、問題解決が行いやすくなった。"
+            },
+            {
               title: "AIを知識豊富な技術者として捉える。",
               description:
                 "基本的には正しい回答が返ってくるが、まれに大きな矛盾や見落としがあるため、あくまで人と対話をするように利用した。\n今回の開発を通して、AIの特性を理解し、適切に活用するスキルが向上した。"
@@ -152,7 +158,7 @@ export const PROJECTS_DATA: Project[] = [
             {
               title: "ソースコードは基本的にAIに書いてもらい、レビューと調整を自身が担当。",
               description:
-                "今回の開発でソースコードはAIに作成させたほうが高速かつ高品質であると感じた。\n今回の開発で、人間はシステムの全体像とそのプロセスを正確に設計/把握し、その実装をAIに任せる役割分担が効果的であると実感した。"
+                "今回の開発でソースコードはAIに作成させたほうが高速かつ高品質であると感じた。\n人間はシステムの全体像とそのプロセスを正確に設計/把握し、その実装をAIに任せる役割分担が効果的であると実感した。"
             },
             {
               title: "AIに全面的に委任することも可能",
@@ -231,6 +237,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "Node.js", icon: "" },
       { name: "Google Apps Script", icon: "" }
     ],
+    cardSize: "regular",
     detail: {
       type: "migration",
       pdf: "https://www.exa-corp.co.jp/technews/file/EVF2018_A-2.pdf",
@@ -274,11 +281,6 @@ export const PROJECTS_DATA: Project[] = [
                 "ステートレスな環境での会話状態管理",
               description:
                 "DynamoDB に会話ステータスを保持する設計を導入し、Lambda の都度起動でも対話の連続性を維持できるようにした。"
-            },
-            {
-              title: "レスポンス速度の根本的な問題解決",
-              description:
-                "メモリ割り当てのチューニングとキャッシュ戦略を見直し、チャットボット応答を 4 秒から 0.1 秒まで短縮。"
             },
             {
               title: "クラウド依存環境でのローカル開発",
@@ -339,7 +341,7 @@ export const PROJECTS_DATA: Project[] = [
   },
   {
     id: 3,
-    title: "クラウドネイティブなTODO管理システム開発ハンズオン設計・講師実績",
+    title: "クラウドネイティブ開発ハンズオン設計・講師実績",
     summary:
       "AWSサーバーレスアーキテクチャを2時間で体得できるハンズオン研修を設計・講師として実施。S3/CloudFront/API Gateway/Lambda/DynamoDBを組み合わせた実践的なクラウドネイティブ開発を体系化し、延べ200名以上に登壇。",
     techStack: [
@@ -350,6 +352,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "S3", icon: "/aws-icons/s3_64.svg" },
       { name: "Node.js", icon: "" }
     ],
+    cardSize: "regular",
     detail: {
       type: "handson",
       pdf: "https://www.exa-corp.co.jp/technews/file/EVF2019_E-1.pdf",
@@ -431,6 +434,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "Cost Explorer", icon: "/aws-icons/cost-explorer_64.svg" },
       { name: "Tag Editor", icon: "/aws-icons/tag-editor_64.svg" }
     ],
+    cardSize: "compact",
     detail: {
       type: "simple",
       role: "クラウドコストアナリスト",
