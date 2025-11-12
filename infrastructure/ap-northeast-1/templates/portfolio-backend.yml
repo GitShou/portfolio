@@ -18,7 +18,7 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: nodejs18.x
+    Runtime: nodejs22.x
     Timeout: 10
     Tags:
       project: !Ref ProjectName
@@ -190,7 +190,6 @@ Resources:
       FunctionName: !Sub "${ProjectName}-parameter-writer-wrapper"
       CodeUri: ../Lambda/src/parameter-writer-wrapper/
       Handler: index.handler
-      Runtime: nodejs18.x
       MemorySize: 128
       Timeout: 30
       Environment:

@@ -58,7 +58,7 @@ Resources:
       Description: CloudFront viewer-request Lambda@Edge function that rewrites clean URLs to index.html
       CodeUri: ../Lambda/src/cloudfront-viewer-request/
       Handler: index.handler
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       MemorySize: 128
       Timeout: 5
       Role: !GetAtt ViewerRequestRewriteFunctionRole.Arn
