@@ -27,6 +27,33 @@ const sanitizeId = (candidateId, fallbackId) => {
   return typeof candidateId === 'number' ? candidateId : String(candidateId);
 };
 
+const RESERVED_DYNAMO_KEYS = new Set([
+  'EntityPartitionKey',
+  'EntitySortKey',
+  'PortfolioIndexPartitionKey',
+  'PortfolioIndexSortKey',
+  'ProjectTypeIndexPartitionKey',
+  'ProjectTypeIndexSortKey',
+  'createdAt',
+  'updatedAt',
+]);
+
+const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const assignProjectAttributes = (target, source) => {
+  if (!isPlainObject(source)) return;
+  for (const [key, value] of Object.entries(source)) {
+    if (RESERVED_DYNAMO_KEYS.has(key) || key === 'metadata' || key === 'id') {
+      continue;
+    }
+    if (value === undefined) {
+      delete target[key];
+      continue;
+    }
+    target[key] = value;
+  }
+};
+
 // テストでDocumentClientやUUID生成を差し替えられるようにするファクトリ。
 export function createHandler({ documentClient, uuidGenerator } = {}) {
   const dynamoDb = documentClient ?? buildDocumentClient();
@@ -50,15 +77,40 @@ export function createHandler({ documentClient, uuidGenerator } = {}) {
       const id = sanitizeId(providedId, generatedId);
       const idForPartition = typeof id === 'number' ? id : id.toString();
 
-      const detail = body.detail ?? null;
-      const projectType = detail?.type ?? body.type ?? null;
+      const projectAttributes = {};
+      assignProjectAttributes(projectAttributes, body);
 
+      projectAttributes.id = id;
+      projectAttributes.title = body.title;
+      projectAttributes.summary = body.summary;
+      projectAttributes.techStack = Array.isArray(body.techStack) ? body.techStack : [];
+      projectAttributes.detail = body.detail ?? null;
+
+      const metadataFromPayload = isPlainObject(body.metadata) ? body.metadata : {};
+      const rawOrder = metadataFromPayload.order;
+      const normalizedOrder =
+        typeof rawOrder === 'number' && Number.isFinite(rawOrder) ? rawOrder : null;
+
+      const createdAt = metadataFromPayload.createdAt ?? now;
       const metadata = {
-        status: body.metadata?.status ?? 'PUBLISHED',
-        order: typeof body.metadata?.order === 'number' ? body.metadata.order : null,
-        createdAt: now,
+        ...metadataFromPayload,
+        status: metadataFromPayload.status ?? 'PUBLISHED',
+        order: normalizedOrder,
+        createdAt,
         updatedAt: now,
       };
+
+      projectAttributes.metadata = metadata;
+      projectAttributes.createdAt = createdAt;
+      projectAttributes.updatedAt = now;
+
+      const projectType =
+        body.type ?? projectAttributes.detail?.type ?? projectAttributes.type ?? null;
+      if (projectType) {
+        projectAttributes.type = projectType;
+      } else {
+        delete projectAttributes.type;
+      }
 
       const orderToken =
         metadata.order !== null
@@ -66,23 +118,15 @@ export function createHandler({ documentClient, uuidGenerator } = {}) {
           : buildFallbackOrderToken();
 
       const projectItem = {
+        ...projectAttributes,
         EntityPartitionKey: `PROJECT#${idForPartition}`,
         EntitySortKey: 'PROFILE',
         PortfolioIndexPartitionKey: 'PORTFOLIO#ALL',
         PortfolioIndexSortKey: orderToken,
-        id,
-        title: body.title,
-        summary: body.summary,
-        techStack: body.techStack,
-        detail,
-        metadata,
-        createdAt: now,
-        updatedAt: now,
       };
 
-      if (projectType) {
-        projectItem.type = projectType;
-        projectItem.ProjectTypeIndexPartitionKey = `TYPE#${projectType}`;
+      if (projectAttributes.type) {
+        projectItem.ProjectTypeIndexPartitionKey = `TYPE#${projectAttributes.type}`;
         projectItem.ProjectTypeIndexSortKey = orderToken;
       }
 
@@ -94,17 +138,7 @@ export function createHandler({ documentClient, uuidGenerator } = {}) {
       });
       await dynamoDb.send(command);
 
-      const responseProject = {
-        id,
-        title: body.title,
-        summary: body.summary,
-        techStack: body.techStack,
-        detail,
-        metadata,
-        type: projectType,
-        createdAt: now,
-        updatedAt: now,
-      };
+      const responseProject = { ...projectAttributes };
 
       return {
         statusCode: 201,

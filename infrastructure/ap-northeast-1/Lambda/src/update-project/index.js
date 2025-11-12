@@ -26,6 +26,33 @@ const buildFallbackOrderToken = () =>
 const toPartitionKeyValue = (id) =>
   typeof id === 'number' ? id.toString() : String(id);
 
+const RESERVED_DYNAMO_KEYS = new Set([
+  'EntityPartitionKey',
+  'EntitySortKey',
+  'PortfolioIndexPartitionKey',
+  'PortfolioIndexSortKey',
+  'ProjectTypeIndexPartitionKey',
+  'ProjectTypeIndexSortKey',
+  'createdAt',
+  'updatedAt',
+]);
+
+const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+
+const assignProjectAttributes = (target, source) => {
+  if (!isPlainObject(source)) return;
+  for (const [key, value] of Object.entries(source)) {
+    if (RESERVED_DYNAMO_KEYS.has(key) || key === 'metadata' || key === 'id') {
+      continue;
+    }
+    if (value === undefined) {
+      delete target[key];
+      continue;
+    }
+    target[key] = value;
+  }
+};
+
 const sanitizeProjectItem = (item) => {
   if (!item) return null;
   const {
@@ -74,52 +101,50 @@ export function createHandler({ documentClient } = {}) {
         };
       }
 
-  const existingItem = existingResult.Item;
-  const existingOrderToken = existingItem.PortfolioIndexSortKey;
+      const existingItem = existingResult.Item;
+      const existingOrderToken = existingItem.PortfolioIndexSortKey;
       const updatedItem = { ...existingItem };
 
-      if (body.title !== undefined) {
-        updatedItem.title = body.title;
-      }
-      if (body.summary !== undefined) {
-        updatedItem.summary = body.summary;
-      }
-      if (body.techStack !== undefined) {
-        updatedItem.techStack = body.techStack;
-      }
-      if (body.detail !== undefined) {
-        updatedItem.detail = body.detail;
-      }
+      assignProjectAttributes(updatedItem, body);
 
-      if (!updatedItem.metadata) {
-        updatedItem.metadata = {};
-      }
-      if (body.metadata) {
-        updatedItem.metadata = {
-          ...updatedItem.metadata,
-          ...body.metadata,
-        };
-      }
+      const metadataPatch = isPlainObject(body.metadata) ? body.metadata : undefined;
+      const existingMetadata = isPlainObject(updatedItem.metadata)
+        ? { ...updatedItem.metadata }
+        : {};
 
       const now = new Date().toISOString();
-      updatedItem.updatedAt = now;
-      updatedItem.metadata = {
-        ...updatedItem.metadata,
+      const createdAt = existingMetadata.createdAt ?? now;
+
+      const mergedMetadata = {
+        ...existingMetadata,
+        ...(metadataPatch ?? {}),
+        createdAt,
         updatedAt: now,
       };
 
+      const rawOrder = mergedMetadata.order;
+      const normalizedOrder =
+        typeof rawOrder === 'number' && Number.isFinite(rawOrder)
+          ? rawOrder
+          : existingMetadata.order ?? null;
+
+      mergedMetadata.order = normalizedOrder;
+
+      updatedItem.metadata = mergedMetadata;
+      updatedItem.updatedAt = now;
+      updatedItem.createdAt = existingItem.createdAt ?? createdAt;
+
       const projectType =
-        body.type ?? body.detail?.type ?? updatedItem.type ?? updatedItem.detail?.type ?? null;
+        body.type ?? updatedItem.detail?.type ?? updatedItem.type ?? existingItem.type ?? null;
       if (projectType) {
         updatedItem.type = projectType;
       } else {
         delete updatedItem.type;
       }
 
-      const orderValue = updatedItem.metadata?.order;
       const orderToken =
-        typeof orderValue === 'number'
-          ? buildOrderToken(orderValue)
+        typeof mergedMetadata.order === 'number'
+          ? buildOrderToken(mergedMetadata.order)
           : existingOrderToken ?? buildFallbackOrderToken();
 
       updatedItem.EntityPartitionKey = `PROJECT#${partitionKeyValue}`;
@@ -127,8 +152,8 @@ export function createHandler({ documentClient } = {}) {
       updatedItem.PortfolioIndexPartitionKey = 'PORTFOLIO#ALL';
       updatedItem.PortfolioIndexSortKey = orderToken;
 
-      if (projectType) {
-        updatedItem.ProjectTypeIndexPartitionKey = `TYPE#${projectType}`;
+      if (updatedItem.type) {
+        updatedItem.ProjectTypeIndexPartitionKey = `TYPE#${updatedItem.type}`;
         updatedItem.ProjectTypeIndexSortKey = orderToken;
       } else {
         delete updatedItem.ProjectTypeIndexPartitionKey;
