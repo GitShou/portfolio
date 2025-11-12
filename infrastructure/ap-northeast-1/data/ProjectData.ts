@@ -82,6 +82,11 @@ export const PROJECTS_DATA: Project[] = [
                 "AWSのサーバーレスサービスをフル活用することで、インフラ管理の手間を大幅に削減。全面的なコード化も可能となり、迅速な展開と変更が実現できた。\nTemplateもSAMを用いて記述し、可読性を高めた。"
             },
             {
+              title: "テンプレート駆動開発の徹底",
+              description:
+                "パイプライン以外の各AWSリソースを手動で設定、修正は一切行わず、すべてCloudFormationテンプレートで管理。\nこれにより、環境の再現性が向上し、変更履歴の追跡も容易となった。"
+            },
+            {
               title: "Lambda@Edgeを活用した柔軟なURL設計",
               description:
                 "Lambda@Edgeを使用して、CloudFrontのリクエストを動的に書き換える仕組みを導入。\nこれにより、静的サイトでありながら柔軟なURL設計が可能となり、SEOやユーザビリティの向上に寄与した。"
@@ -130,6 +135,10 @@ export const PROJECTS_DATA: Project[] = [
             {
               title: "システムの監視機構の強化",
               description:"CloudWatch Canaryなどによるフロントエンドの監視や、Lambda等を使ったインテグレーションテストによるバックエンドの強化が必要。"
+            },
+            {
+              title:"バリデーション機構の強化",
+              description:"プロジェクトのデータを編集する際に、データの整合性を保つための適切なバリデーション機構が必要。\nデータの柔軟さと整合性を両立させるための工夫が求められる。"
             }
           ]
         },
