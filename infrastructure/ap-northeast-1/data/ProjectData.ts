@@ -74,7 +74,7 @@ export const PROJECTS_DATA: Project[] = [
         {
           heading: "クラウドネイティブな設計と自動化",
           body:
-            "自身が持つAWSの知識/技術を最大限表現するためにサーバーレスとIaCの徹底と自動化にこだわり抜いた。CFNでデプロイされるリソースはそのすべてが自動的に更新されるように設計されており、手動での介入を一切排除している。",
+            "自身が持つAWSの知識/技術を最大限表現するためにサーバーレスとIaCの徹底と自動化にこだわり抜いた。\nCFNでデプロイされるリソースはそのすべてが自動的に更新されるように設計されており、手動での介入を一切排除している。",
           good: [
             {
               title: "サーバーレスアーキテクチャの徹底",
@@ -235,7 +235,7 @@ export const PROJECTS_DATA: Project[] = [
     id: 2,
     title: "AWSサーバーレス研修管理システム移行",
     summary:
-      "オンプレミスの研修管理システムをAWSサーバーレス（API Gateway, Lambda, DynamoDB等）へ移行。Google認証連携やREST API化も担当。リーダーとして設計・構築・運用を主導。",
+      "オンプレミスの研修管理システムをAWSサーバーレス（API Gateway, Lambda, DynamoDB等）へ移行。\nGoogle認証連携やREST API化も担当。リーダーとして設計・構築・運用を主導。",
     techStack: [
       { name: "AWS API Gateway", icon: "/aws-icons/api-gateway_64.svg" },
       { name: "Lambda", icon: "/aws-icons/lambda_64.svg" },
@@ -352,7 +352,7 @@ export const PROJECTS_DATA: Project[] = [
     id: 3,
     title: "クラウドネイティブ開発ハンズオン設計・講師実績",
     summary:
-      "AWSサーバーレスアーキテクチャを2時間で体得できるハンズオン研修を設計・講師として実施。S3/CloudFront/API Gateway/Lambda/DynamoDBを組み合わせた実践的なクラウドネイティブ開発を体系化し、延べ200名以上に登壇。",
+      "AWSサーバーレスアーキテクチャを2時間で体得できるハンズオン研修を設計・講師として実施。\nS3/CloudFront/API Gateway/Lambda/DynamoDBを組み合わせた実践的なクラウドネイティブ開発を体系化し、延べ200名以上に登壇。",
     techStack: [
       { name: "AWS Lambda", icon: "/aws-icons/lambda_64.svg" },
       { name: "DynamoDB (NoSQL)", icon: "/aws-icons/dynamodb_64.svg" },
