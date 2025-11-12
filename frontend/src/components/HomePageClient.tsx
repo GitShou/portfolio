@@ -97,15 +97,26 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
               技術ポートフォリオサイト開発の舞台裏
             </Heading>
             <Text mb={4} color="gray.700" fontSize="sm">
-              このサイトは私の現時点での技術力を端的に証明するために、AWS サーバーレス基盤を活用したフルマネージド構成で構築しています。
+              このサイトは私の現時点(2025年11月)での技術力を端的に証明するために、AWS サーバーレス基盤を活用したフルマネージド構成で構築しています。
               自動化を最優先した作りになっており、デプロイの際に手動での介入を一切排除しています。
             </Text>
             <Text mb={6} color="gray.600" fontSize="sm">
               アーキテクチャ図と実装の詳細、得られた知見はプロジェクトページにまとめています。ぜひご覧ください。
             </Text>
-            <Button as={Link} href="/projects/1" colorScheme="teal" variant="solid">
-              プロジェクト詳細を見る
-            </Button>
+            <HStack spacing={3} mt={4}>
+              <Button as={Link} href="/projects/1" colorScheme="teal" variant="solid">
+                プロジェクト詳細を見る
+              </Button>
+              <Button
+                as={Link}
+                href="https://github.com/GitShou/portfolio"
+                colorScheme="teal"
+                variant="outline"
+                isExternal
+              >
+                GitHubでソースコードを見る
+              </Button>
+            </HStack>
           </Box>
           <Box flex="1" w="full">
             <Image
@@ -198,7 +209,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             {[
               {
                 title: "強力な自走力と探求力",
-                body: "本Webページをフルスタックでシステムを一人で開発し、未知の技術や課題に対しても自ら学び、最適な解決策をAIなどの技術も駆使しながら一人で模索しました。"
+                body: "本Webページをフルスタックで一人で開発し、未知の技術や課題に対しても自ら学び、最適な解決策をAIなどの技術も駆使しながら一人で模索しました。"
               },
               {
                 title: "未知領域への適応力",
