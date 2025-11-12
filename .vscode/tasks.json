@@ -7,7 +7,19 @@
 			"path": "frontend",
 			"problemMatcher": [],
 			"label": "npm: mock:api - frontend",
-			"detail": "npm run generate:projects && json-server --watch mocks/projects.json --port 4000"
+			"detail": "json-server --watch mocks/projects.json --port 4000",
+			"dependsOn": [
+				"npm: generate:projects - frontend"
+			],
+			"dependsOrder": "sequence"
+		},
+		{
+			"type": "npm",
+			"script": "generate:projects",
+			"path": "frontend",
+			"problemMatcher": [],
+			"label": "npm: generate:projects - frontend",
+			"detail": "tsx scripts/generate-projects-json.ts"
 		},
 		{
 			"type": "npm",
