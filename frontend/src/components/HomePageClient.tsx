@@ -42,7 +42,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         maxW="1200px"
         mt={8}
         mb={12}
-        px={8}
+        px={{ base: 4, md: 8 }}
         py={12}
         bg="gray.800"
         color="white"
@@ -82,7 +82,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         </Box>
       </Container>
 
-      <Container as="section" id="portfolio-project" maxW="1200px" px={8} mb={12}>
+  <Container as="section" id="portfolio-project" maxW="1200px" px={{ base: 4, md: 8 }} mb={12}>
         <Flex
           direction={{ base: "column", md: "row" }}
           align="center"
@@ -90,6 +90,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
           bg="white"
           borderRadius="xl"
           boxShadow="md"
+          px={{ base: 4, md: 0 }}
           p={{ base: 6, md: 10 }}
         >
           <Box flex="1">
@@ -104,8 +105,14 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
             <Text mb={6} color="gray.600" fontSize="sm">
               アーキテクチャ図と実装の詳細、得られた知見はプロジェクトページにまとめています。ぜひご覧ください。
             </Text>
-            <HStack spacing={3} mt={4}>
-              <Button as={Link} href="/projects/1" colorScheme="teal" variant="solid">
+            <HStack spacing={3} mt={4} flexWrap="wrap">
+              <Button
+                as={Link}
+                href="/projects/1"
+                colorScheme="teal"
+                variant="solid"
+                w={{ base: "full", sm: "auto" }}
+              >
                 プロジェクト詳細を見る
               </Button>
               <Button
@@ -114,6 +121,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
                 colorScheme="teal"
                 variant="outline"
                 isExternal
+                w={{ base: "full", sm: "auto" }}
               >
                 GitHubでソースコードを見る
               </Button>
@@ -133,7 +141,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         </Flex>
       </Container>
 
-      <Container as="section" id="about" maxW="1200px" px={8} mb={12}>
+  <Container as="section" id="about" maxW="1200px" px={{ base: 4, md: 8 }} mb={12}>
         <Flex align="flex-start" gap={12}>
           <Box flex="1">
             <Heading as="h2" size="md" mb={4}>
@@ -198,7 +206,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
         </Flex>
       </Container>
 
-      <Container as="section" id="highlights" maxW="1200px" px={8} mb={12}>
+  <Container as="section" id="highlights" maxW="1200px" px={{ base: 4, md: 8 }} mb={12}>
         <Box bg="white" borderRadius="xl" boxShadow="sm" borderWidth="1px" borderColor="gray.100" p={{ base: 6, md: 8 }}>
           <Heading as="h2" size="md" mb={2} color="teal.700">
             HIGHLIGHTS
@@ -239,7 +247,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
       </Container>
 
       <div ref={projectsRef}>
-        <Container as="section" id="projects" maxW="1200px" px={8} mb={12}>
+  <Container as="section" id="projects" maxW="1200px" px={{ base: 4, md: 8 }} mb={12}>
           <Heading as="h2" size="md" mb={4}>
             PROJECTS
           </Heading>
@@ -259,7 +267,7 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
       </div>
 
       <div ref={outputRef}>
-        <Container as="section" id="output" maxW="1200px" px={8} mb={12}>
+  <Container as="section" id="output" maxW="1200px" px={{ base: 4, md: 8 }} mb={12}>
           <Heading as="h2" size="md" mb={4}>
             OUTPUT
           </Heading>

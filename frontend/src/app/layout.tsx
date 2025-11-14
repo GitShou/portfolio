@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { Providers } from './providers'; 
+import { Providers } from "./providers";
+import { ScrollToTopButton } from "@/components/ScrollToTopButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +30,9 @@ export default function RootLayout({
   return (
     <html lang="ja"> 
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {/* 💡 修正点 5: Providers で子要素をラップ */}
         <Providers>
           {children}
+          <ScrollToTopButton />
         </Providers>
       </body>
     </html>
