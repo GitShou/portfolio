@@ -371,7 +371,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "S3", icon: "/aws-icons/s3_64.svg" },
       { name: "Node.js", icon: "" }
     ],
-    cardSize: "regular",
+    cardSize: "compact",
     detail: {
       type: "handson",
       pdf: "https://www.exa-corp.co.jp/technews/file/EVF2019_E-1.pdf",

@@ -12,8 +12,8 @@ interface ProjectProps {
 }
 
 const CARD_HEIGHTS = {
-    regular: "550px",
-    compact: "400px",
+    regular: "600px",
+    compact: "500px",
 } as const;
 
 const ProjectCard = ({ project }: ProjectProps) => {
