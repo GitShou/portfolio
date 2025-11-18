@@ -7,6 +7,14 @@ Parameters:
     Type: String
     Description: プロジェクト名（リソース名のプレフィックス）
     Default: "portfolio5352"
+  CloudFrontDomainName:
+    Type: String
+    Description: CloudFrontディストリビューションで利用するカスタムドメイン名
+    Default: "portfolio.shou-tech.work"
+  CloudFrontAcmCertificateArn:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: CloudFrontで使用するACM証明書ARN（us-east-1で発行されたもの）を格納したSSMパラメータ
+    Default: "/acm/mydomain/arn"
   WebAclArnParameterName:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: CloudFront用WAF WebACLのARNを格納したSSMパラメータ
@@ -15,6 +23,14 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: viewer-request Lambda@Edge 関数バージョンARNを格納したSSMパラメータ
     Default: "/portfolio/ViewerRequestRewriteFunctionVersion/arn"
+  Route53HostedZoneId:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: "Route53ホストゾーンIDを格納したSSMパラメータ"
+    Default: "/Route53/hostzone/id"
+  Route53RecordName:
+    Type: String
+    Description: 作成するサブドメインのFQDN（末尾のドットは不要）
+    Default: "portfolio.shou-tech.work"
 
 Resources:
   StaticSiteBucket:
@@ -37,6 +53,8 @@ Resources:
       DistributionConfig:
         Enabled: true
         DefaultRootObject: index.html
+        Aliases:
+          - !Ref CloudFrontDomainName
         WebACLId: !Ref WebAclArnParameterName
         Origins:
           - Id: S3Origin
@@ -64,7 +82,9 @@ Resources:
               Forward: none
         PriceClass: PriceClass_100
         ViewerCertificate:
-          CloudFrontDefaultCertificate: true
+          AcmCertificateArn: !Ref CloudFrontAcmCertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
       Tags:
         - Key: project
           Value: !Ref ProjectName
@@ -101,6 +121,30 @@ Resources:
       Description: !Sub "${ProjectName} CloudFront distribution id"
       Tags:
         project: !Ref ProjectName
+
+  PortfolioAliasRecordA:
+    Type: AWS::Route53::RecordSet
+    DependsOn: CloudFrontDistribution
+    Properties:
+      HostedZoneId: !Ref Route53HostedZoneId
+      Name: !Ref Route53RecordName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
+
+  PortfolioAliasRecordAAAA:
+    Type: AWS::Route53::RecordSet
+    DependsOn: CloudFrontDistribution
+    Properties:
+      HostedZoneId: !Ref Route53HostedZoneId
+      Name: !Ref Route53RecordName
+      Type: AAAA
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+        EvaluateTargetHealth: false
 
 Outputs:
   StaticSiteBucketName:
