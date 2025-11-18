@@ -58,6 +58,7 @@ export const PROJECTS_DATA: Project[] = [
       { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
       { name: "Amazon S3", icon: "/aws-icons/s3_64.svg" },
       { name: "AWS CodePipeline", icon: "/aws-icons/codebuild_64.svg" },
+      { name: "Route 53", icon:"/aws-icons/Route-53_64.svg"},
       { name: "Next.js", icon: "" },
       { name: "TypeScript", icon: "" },
       { name: "Chakra UI", icon: "" }

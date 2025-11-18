@@ -1,20 +1,6 @@
 # サービス名リスト（部分一致用）
 $services = @(
-  "api-gateway",
-  "lambda",
-  "dynamodb",
-  "cloudfront",
-  "s3",
-  "cognito",
-  "cloudformation",
-  "codecommit",
-  "codebuild",
-  "billing",
-  "cost-explorer",
-  "tag-editor",
-  "athena",
-  "glue",
-  "cloudwatch"
+  "Route-53"
 )
 
 $srcRoot = "references/aws-icons"
