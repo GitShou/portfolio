@@ -65,6 +65,8 @@ export const PROJECTS_DATA: Project[] = [
       { name: "AWS Systems Manager Parameter Store", icon: "/aws-icons/systems-manager_64.svg" },
       { name: "AWS CodeBuild", icon: "/aws-icons/codebuild_64.svg" },
       { name: "AWS IAM", icon: "/aws-icons/identity-and-access-management_64.svg" },
+      { name: "AWS Glue", icon: "/aws-icons/glue_64.svg" },
+      { name: "Amazon Athena", icon: "/aws-icons/athena_64.svg" },
       { name: "Next.js", icon: "" },
       { name: "TypeScript", icon: "" },
       { name: "Chakra UI", icon: "" }
@@ -102,6 +104,11 @@ export const PROJECTS_DATA: Project[] = [
               title: "SSM Parameter Store への自動登録",
               description:
                 "各リソースが依存するARNやURLをデプロイ後に自動登録する仕組みを導入。\nこれにより、手動での設定ミスを防ぎ、迅速で柔軟な環境構築と更新が可能となった。"
+            },
+            {
+              title: "CloudFrontログをGlue/Athenaで可視化基盤化",
+              description:
+                "CloudFrontのアクセスログをS3へ自動出力し、Glue Data CatalogとAthenaを組み合わせてパーティション化・Parquet化。\n低コストでクエリ・可視化できる分析基盤をテンプレート化し、運用の属人化を排除した。"
             },
             {
               title: "レイヤーごとにスタックを分離",
