@@ -1,6 +1,6 @@
-AWSTemplateFormatVersion: '2010-09-09'
+﻿AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: CloudFront用WAFv2 WebACLおよびLambda@Edgeリソース（us-east-1専用）
+Description: CloudFront向けWAFv2 WebACLとLambda@Edgeリソース（us-east-1専用）
 
 Parameters:
   WebAclName:
@@ -10,11 +10,11 @@ Parameters:
   ProjectName:
     Type: String
     Default: "portfolio5352"
-    Description: プロジェクト名（リソース名のプレフィックス）
+    Description: プロジェクト／リソース名のプレフィックス
   ViewerRequestFunctionName:
     Type: String
     Default: "portfolio5352-vwrw"
-    Description: Lambda@Edge viewer-request 関数名（64文字以内を推奨）
+    Description: Lambda@Edge viewer-request 関数名（4文字以上推奨）
 
 Resources:
   CloudFrontWebACL:
@@ -28,7 +28,19 @@ Resources:
         SampledRequestsEnabled: true
         CloudWatchMetricsEnabled: true
         MetricName: !Ref WebAclName
-      Rules: []  # 必要に応じてルールを追加
+      Rules:
+        - Name: RateLimit
+          Priority: 0
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: 100  # 1 IPあたり5分間の上限（静的サイト想定で低め）
+              AggregateKeyType: IP
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: rate-limit
       Tags:
         - Key: project
           Value: !Ref ProjectName
@@ -55,7 +67,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Ref ViewerRequestFunctionName
-      Description: CloudFront viewer-request Lambda@Edge function that rewrites clean URLs to index.html
+      Description: CloudFrontのクリーンURLをindex.htmlに書き換えるviewer-request Lambda@Edge関数
       CodeUri: ../Lambda/src/cloudfront-viewer-request/
       Handler: index.handler
       Runtime: nodejs22.x
@@ -76,8 +88,8 @@ Resources:
 Outputs:
   WebACLArn:
     Value: !GetAtt CloudFrontWebACL.Arn
-    Description: CloudFront用WAF WebACLのARN（CloudFrontのWebACLIdに指定）
+    Description: CloudFrontのWebACL ARN（ディストリビューションにアタッチ）
 
   VRRFVersionParameterARN:
     Value: !Ref ViewerRequestRewriteFunction.Version
-    Description: CloudFront viewer-request Lambda@Edge関数バージョンARN
+    Description: CloudFront viewer-request Lambda@Edge関数のバージョンARN
