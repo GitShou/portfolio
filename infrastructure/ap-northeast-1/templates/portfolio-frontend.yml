@@ -124,6 +124,10 @@ Resources:
             Status: Enabled
             ExpirationInDays: 30
             Prefix: cloudfront/
+          - Id: DeleteParquetAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+            Prefix: cloudfront-parquet/
       Tags:
         - Key: project
           Value: !Ref ProjectName
@@ -147,6 +151,178 @@ Resources:
               ArnLike:
                 aws:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
+  AthenaResultBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-athena-results"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteResultsAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+            Prefix: cloudfront/
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  AthenaResultBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AthenaResultBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowAthenaAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - s3:GetBucketLocation
+              - s3:ListBucket
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "${AthenaResultBucket.Arn}"
+              - !Sub "${AthenaResultBucket.Arn}/*"
+
+  CloudFrontLogsDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Sub "${ProjectName}-cloudfront-logs"
+        Description: CloudFront アクセスログ用の Glue データベース
+
+  CloudFrontLogsRawTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref CloudFrontLogsDatabase
+      TableInput:
+        Name: cloudfront_logs_raw
+        Description: CloudFront 標準ログ（TSV, gzip）を読むテーブル
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: cloudfront
+          compressionType: gzip
+          skip.header.line.count: "2"
+          typeOfData: file
+        StorageDescriptor:
+          Columns:
+            - { Name: date, Type: string }
+            - { Name: time, Type: string }
+            - { Name: x_edge_location, Type: string }
+            - { Name: sc_bytes, Type: bigint }
+            - { Name: c_ip, Type: string }
+            - { Name: cs_method, Type: string }
+            - { Name: cs_host, Type: string }
+            - { Name: cs_uri_stem, Type: string }
+            - { Name: sc_status, Type: int }
+            - { Name: cs_referer, Type: string }
+            - { Name: cs_user_agent, Type: string }
+            - { Name: cs_uri_query, Type: string }
+            - { Name: cs_cookie, Type: string }
+            - { Name: x_edge_result_type, Type: string }
+            - { Name: x_edge_request_id, Type: string }
+            - { Name: x_host_header, Type: string }
+            - { Name: cs_protocol, Type: string }
+            - { Name: cs_bytes, Type: bigint }
+            - { Name: time_taken, Type: double }
+            - { Name: x_forwarded_for, Type: string }
+            - { Name: ssl_protocol, Type: string }
+            - { Name: ssl_cipher, Type: string }
+            - { Name: x_edge_response_result_type, Type: string }
+            - { Name: cs_protocol_version, Type: string }
+            - { Name: fle_status, Type: string }
+            - { Name: fle_encrypted_fields, Type: string }
+            - { Name: c_port, Type: int }
+            - { Name: time_to_first_byte, Type: double }
+            - { Name: x_edge_detailed_result_type, Type: string }
+            - { Name: sc_content_type, Type: string }
+            - { Name: sc_content_len, Type: bigint }
+            - { Name: sc_range_start, Type: bigint }
+            - { Name: sc_range_end, Type: bigint }
+          Location: !Sub "s3://${CloudFrontLogBucket}/cloudfront/"
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: true
+          SerdeInfo:
+            SerializationLibrary: org.apache.hadoop.hive.serde2.RegexSerDe
+            Parameters:
+              serialization.format: "1"
+              input.regex: '^([\\S]+)\\t([\\S]+)\\t([\\S]+)\\t([\\S]+)\\t([\\S]+)\\t([A-Z]+)\\t([^\\t]+)\\t([^\\t]+)\\t([0-9]{3})\\t([^\\t]*)\\t([^\\t]*)\\t([^\\t]*)\\t([^\\t]*)\\t([\\S]+)\\t([\\S]+)\\t([^\\t]+)\\t([\\S]+)\\t([\\S]+)\\t([\\S]+)\\t([^\\t]*)\\t([\\S]*)\\t([\\S]*)\\t([^\\t]*)\\t([\\S]*)\\t([\\S]*)\\t([\\S]*)\\t([\\S]*)\\t([\\S]*)\\t([\\S]*)\\t([^\\t]*)\\t([^\\t]*)\\t([^\\t]*)\\t([^\\t]*)$'
+          StoredAsSubDirectories: false
+
+  CloudFrontLogsPartitionedCrawlerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-cf-crawler-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+      Policies:
+        - PolicyName: GlueS3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "${CloudFrontLogBucket.Arn}"
+                  - !Sub "${CloudFrontLogBucket.Arn}/*"
+                  - !Sub "${AthenaResultBucket.Arn}"
+                  - !Sub "${AthenaResultBucket.Arn}/*"
+
+  CloudFrontLogsPartitionedCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Sub "${ProjectName}-cf-parquet-crawler"
+      Role: !GetAtt CloudFrontLogsPartitionedCrawlerRole.Arn
+      DatabaseName: !Ref CloudFrontLogsDatabase
+      TablePrefix: cf_parquet_
+      Targets:
+        S3Targets:
+          - Path: !Sub "s3://${CloudFrontLogBucket}/cloudfront-parquet/"
+      Schedule:
+        ScheduleExpression: "cron(0 3 * * ? *)"
+      SchemaChangePolicy:
+        UpdateBehavior: LOG
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+      Description: "Parquet パーティション化後の CloudFront ログを自動テーブル化する Crawler"
+
+  CloudFrontAthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub "${ProjectName}-cf-workgroup"
+      Description: CloudFront ログ分析用 WorkGroup
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: false
+        ResultConfiguration:
+          OutputLocation: !Sub "s3://${AthenaResultBucket}/cloudfront/"
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
   StaticSiteBucketNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
