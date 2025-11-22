@@ -261,54 +261,6 @@ Resources:
               serialization.format: "\t"
           StoredAsSubDirectories: false
 
-  CloudFrontLogsPartitionedCrawlerRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub "${ProjectName}-cf-crawler-role"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: glue.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
-      Policies:
-        - PolicyName: GlueS3Access
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:ListBucket
-                Resource:
-                  - !Sub "${CloudFrontLogBucket.Arn}"
-                  - !Sub "${CloudFrontLogBucket.Arn}/*"
-                  - !Sub "${AthenaResultBucket.Arn}"
-                  - !Sub "${AthenaResultBucket.Arn}/*"
-
-  CloudFrontLogsPartitionedCrawler:
-    Type: AWS::Glue::Crawler
-    Properties:
-      Name: !Sub "${ProjectName}-cf-parquet-crawler"
-      Role: !GetAtt CloudFrontLogsPartitionedCrawlerRole.Arn
-      DatabaseName: !Ref CloudFrontLogsDatabase
-      TablePrefix: cf_parquet_
-      Targets:
-        S3Targets:
-          - Path: !Sub "s3://${CloudFrontLogBucket}/cloudfront-parquet/"
-      Schedule:
-        ScheduleExpression: "cron(0 3 * * ? *)"
-      SchemaChangePolicy:
-        UpdateBehavior: LOG
-        DeleteBehavior: LOG
-      RecrawlPolicy:
-        RecrawlBehavior: CRAWL_EVERYTHING
-      Description: "Parquet パーティション化後の CloudFront ログを自動テーブル化する Crawler"
-
   CloudFrontAthenaWorkGroup:
     Type: AWS::Athena::WorkGroup
     Properties:
@@ -323,6 +275,65 @@ Resources:
           OutputLocation: !Sub "s3://${AthenaResultBucket}/cloudfront/"
           EncryptionConfiguration:
             EncryptionOption: SSE_S3
+
+  CloudFrontAthenaDailyInsertRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-cf-athena-insert-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: AthenaStartQuery
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetQueryExecution
+                Resource: "*"
+
+  CloudFrontAthenaDailyInsertFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../Lambda/src/cloudfront-athena-daily-insert
+      FunctionName: !Sub "${ProjectName}-cf-athena-daily-insert"
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt CloudFrontAthenaDailyInsertRole.Arn
+      Timeout: 300
+      Environment:
+        Variables:
+          WORKGROUP: !Ref CloudFrontAthenaWorkGroup
+          DATABASE: !Ref CloudFrontLogsDatabase
+          RAW_TABLE: "cloudfront_logs_raw"
+          PARQUET_TABLE: "cloudfront_logs_parquet"
+          PARQUET_LOCATION: !Sub "s3://${CloudFrontLogBucket}/cloudfront-parquet/"
+
+  CloudFrontAthenaDailyInsertRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${ProjectName}-cf-athena-daily-insert"
+      ScheduleExpression: "cron(15 3 * * ? *)" # 毎日03:15 UTC
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt CloudFrontAthenaDailyInsertFunction.Arn
+          Id: TargetFunctionV1
+
+  CloudFrontAthenaDailyInsertPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref CloudFrontAthenaDailyInsertFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt CloudFrontAthenaDailyInsertRule.Arn
   StaticSiteBucketNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
