@@ -54,7 +54,7 @@ export const PROJECTS_DATA: Project[] = [
     techStack: [
       { name: "AWS CloudFormation", icon: "/aws-icons/cloudformation_64.svg" },
       { name: "AWS CodePipeline", icon: "/aws-icons/codepipeline_64.svg" },
-      { name: "Route 53", icon:"/aws-icons/route-53_64.svg"},
+      { name: "Route 53", icon:"/aws-icons/Route-53_64.svg"},
       { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
       { name: "AWS WAF", icon: "/aws-icons/waf_64.svg" },
       { name: "AWS Lambda@Edge", icon: "/aws-icons/lambda_64.svg" },
