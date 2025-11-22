@@ -12,7 +12,7 @@ import {
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import ProjectCard from "./ProjectCard";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -25,6 +25,31 @@ interface HomePageClientProps {
 const HomePageClient = ({ projects }: HomePageClientProps) => {
   const projectsRef = useRef<HTMLDivElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
+  const techIcons = useMemo(() => {
+    const seen = new Set<string>();
+    const sortedProjects = [...projects].sort((a, b) => {
+      const aId = Number(a.id);
+      const bId = Number(b.id);
+      if (!Number.isNaN(aId) && !Number.isNaN(bId)) {
+        return aId - bId;
+      }
+      return String(a.id).localeCompare(String(b.id));
+    });
+
+    const icons: { src: string; alt: string }[] = [];
+    sortedProjects.forEach((project) => {
+      project.techStack?.forEach((tech) => {
+        const src = tech.icon?.trim();
+        if (!src || seen.has(src)) {
+          return;
+        }
+        seen.add(src);
+        icons.push({ src, alt: tech.name || src });
+      });
+    });
+
+    return icons;
+  }, [projects]);
 
   const scrollToProjects = () => {
     projectsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,24 +187,9 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
               TECHNICAL SKILLS
             </Heading>
             <HStack spacing={2} mb={2} flexWrap="wrap">
-              {[
-                "api-gateway_64.svg",
-                "lambda_64.svg",
-                "dynamodb_64.svg",
-                "cloudfront_64.svg",
-                "s3_64.svg",
-                "cognito_64.svg",
-                "cloudformation_64.svg",
-                "codecommit_64.svg",
-                "codebuild_64.svg",
-                "billing_64.svg",
-                "cost-explorer_64.svg",
-                "athena_64.svg",
-                "glue_64.svg",
-                "cloudwatch_64.svg",
-              ].map((icon) => (
+              {techIcons.map((icon) => (
                 <Box
-                  key={icon}
+                  key={icon.src}
                   bg="white"
                   borderRadius="full"
                   display="flex"
@@ -189,12 +199,12 @@ const HomePageClient = ({ projects }: HomePageClientProps) => {
                   minH="48px"
                   m={1}
                 >
-                  <img
-                    src={`/aws-icons/${icon}`}
-                    alt={icon.replace("_64.svg", "")}
-                    width={48}
-                    height={48}
-                    style={{ borderRadius: "50%" }}
+                  <Image
+                    src={icon.src}
+                    alt={icon.alt}
+                    boxSize="48px"
+                    borderRadius="full"
+                    bg="white"
                   />
                 </Box>
               ))}

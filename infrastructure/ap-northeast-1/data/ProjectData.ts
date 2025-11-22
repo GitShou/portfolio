@@ -52,13 +52,19 @@ export const PROJECTS_DATA: Project[] = [
       "自身のAWSに関する知見や技術を表現するためのポートフォリオ。\nサーバーレスと自動化を最大のテーマとし、それを実現するための技術スタックを採用。\n短期間でより良いものを実現するために、AIを活用して設計・実装を高速化。",
     git: "https://github.com/GitShou/portfolio",
     techStack: [
+      { name: "AWS CloudFormation", icon: "/aws-icons/cloudformation_64.svg" },
+      { name: "AWS CodePipeline", icon: "/aws-icons/codepipeline_64.svg" },
+      { name: "Route 53", icon:"/aws-icons/route-53_64.svg"},
+      { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
+      { name: "AWS WAF", icon: "/aws-icons/waf_64.svg" },
+      { name: "AWS Lambda@Edge", icon: "/aws-icons/lambda_64.svg" },
       { name: "AWS API Gateway", icon: "/aws-icons/api-gateway_64.svg" },
       { name: "AWS Lambda", icon: "/aws-icons/lambda_64.svg" },
       { name: "Amazon DynamoDB", icon: "/aws-icons/dynamodb_64.svg" },
-      { name: "Amazon CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
       { name: "Amazon S3", icon: "/aws-icons/s3_64.svg" },
-      { name: "AWS CodePipeline", icon: "/aws-icons/codebuild_64.svg" },
-      { name: "Route 53", icon:"/aws-icons/Route-53_64.svg"},
+      { name: "AWS Systems Manager Parameter Store", icon: "/aws-icons/systems-manager_64.svg" },
+      { name: "AWS CodeBuild", icon: "/aws-icons/codebuild_64.svg" },
+      { name: "AWS IAM", icon: "/aws-icons/identity-and-access-management_64.svg" },
       { name: "Next.js", icon: "" },
       { name: "TypeScript", icon: "" },
       { name: "Chakra UI", icon: "" }
@@ -242,12 +248,12 @@ export const PROJECTS_DATA: Project[] = [
     summary:
       "オンプレミスの研修管理システムをAWSへ移行。\nその際に維持管理を容易にするため、フルマネージド構成になるように設計。\nGoogle認証連携やREST API化も担当。リーダーとして設計・構築・運用を主導。",
     techStack: [
+      { name: "Cognito", icon: "/aws-icons/cognito_64.svg" },
       { name: "AWS API Gateway", icon: "/aws-icons/api-gateway_64.svg" },
       { name: "Lambda", icon: "/aws-icons/lambda_64.svg" },
       { name: "DynamoDB", icon: "/aws-icons/dynamodb_64.svg" },
       { name: "CloudFront", icon: "/aws-icons/cloudfront_64.svg" },
       { name: "S3", icon: "/aws-icons/s3_64.svg" },
-      { name: "Cognito", icon: "/aws-icons/cognito_64.svg" },
       { name: "Node.js", icon: "" },
       { name: "Google Apps Script", icon: "" }
     ],

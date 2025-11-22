@@ -1,15 +1,25 @@
-# サービス名リスト（部分一致用）
+# AWS services used in this project
 $services = @(
-  "Route-53"
+  "route-53",
+  "cloudfront",
+  "waf",
+  "api-gateway",
+  "lambda",
+  "dynamodb",
+  "s3",
+  "codepipeline",
+  "codebuild",
+  "cloudformation",
+  "cognito",
+  "systems-manager",
+  "identity-and-access-management"
 )
 
 $srcRoot = "references/aws-icons"
 $dstRoot = "frontend/public/aws-icons"
 
 foreach ($service in $services) {
-  # サービス名が部分一致し、ファイル名が_64.svgで終わるものを検索
-  Get-ChildItem -Path $srcRoot -Recurse -Include *$service*_64.svg -File | ForEach-Object {
-    # ファイル名から不要な部分を除去して「サービス名_64.svg」だけにする
+  Get-ChildItem -Path $srcRoot -Recurse -Include "*$service*_64.svg" -File | ForEach-Object {
     $newName = "$service`_64.svg"
     $dstPath = Join-Path $dstRoot $newName
     Write-Host "Copying $($_.FullName) to $dstPath"

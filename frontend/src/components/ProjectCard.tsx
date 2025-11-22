@@ -12,15 +12,17 @@ interface ProjectProps {
 }
 
 const CARD_HEIGHTS = {
-    regular: "600px",
-    compact: "500px",
+    regular: "530px",
+    compact: "470px",
 } as const;
+
+const MAX_TECH_ICONS = 6;
 
 const ProjectCard = ({ project }: ProjectProps) => {
     const cardSize = project.cardSize === "compact" ? "compact" : "regular";
-    const visibleTechStack = project.techStack.filter(
-        (tech) => Boolean(tech.icon && tech.icon.trim() !== "")
-    );
+    const visibleTechStack = project.techStack
+        .filter((tech) => Boolean(tech.icon && tech.icon.trim() !== ""))
+        .slice(0, MAX_TECH_ICONS);
 
     return (
         <Card
@@ -38,8 +40,8 @@ const ProjectCard = ({ project }: ProjectProps) => {
                     {project.title}
                 </Heading>
             </CardHeader>
-            <CardBody display="flex" flexDirection="column" gap={3} flex="1">
-                <Text fontSize="sm" whiteSpace="pre-line" flex="1">
+            <CardBody display="flex" flexDirection="column" gap={2} flex="1">
+                <Text fontSize="sm" whiteSpace="pre-line">
                     {project.summary}
                 </Text>
                         {visibleTechStack.length > 0 ? (
@@ -89,7 +91,7 @@ const ProjectCard = ({ project }: ProjectProps) => {
                             </Box>
                         ) : null}
                 {project.hasOwnProperty("detail") && project.detail ? (
-                    <Box mt="auto">
+                    <Box mt={3}>
                         <Link href={`/projects/${project.id}`} data-testid="project-detail-link">
                             <Button colorScheme="teal" size="sm">
                                 詳細を見る
