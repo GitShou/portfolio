@@ -38,7 +38,7 @@ const runQuery = async (query) => {
 };
 
 const tableExists = async () => {
-  const query = `SHOW TABLES IN ${process.env.DATABASE} LIKE '${process.env.PARQUET_TABLE}'`;
+  const query = `SHOW TABLES IN \`${process.env.DATABASE}\` LIKE '${process.env.PARQUET_TABLE}'`;
   const qid = await runQuery(query);
   const res = await client.send(
     new GetQueryResultsCommand({ QueryExecutionId: qid })
