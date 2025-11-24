@@ -302,6 +302,17 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action:
+                  - glue:GetDatabase
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                  - glue:CreateTable
+                  - glue:CreatePartition
+                  - glue:BatchCreatePartition
+                Resource: "*"
+              - Effect: Allow
+                Action:
                   - s3:GetBucketLocation
                   - s3:ListBucket
                 Resource:
@@ -313,6 +324,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "${AthenaResultBucket.Arn}/*"
+                  - !Sub "${CloudFrontLogBucket.Arn}/cloudfront/*"
                   - !Sub "${CloudFrontLogBucket.Arn}/cloudfront-parquet/*"
 
   CloudFrontAthenaDailyInsertFunction:
