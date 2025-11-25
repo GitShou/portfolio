@@ -96,6 +96,10 @@ export const PROJECTS_DATA: Project[] = [
                 "パイプライン以外の各AWSリソースを手動で設定、修正は一切行わず、すべてCloudFormationテンプレートで管理。\nこれにより、環境の再現性が向上し、変更履歴の追跡も容易となった。"
             },
             {
+              title:"独自ドメインでアクセスできるように",
+              description:"開発の中でCloudFrontが再構成され、URLが変わってしまう可能性を排除するため、Route53を使って独自ドメインを取得し、ルーティングを設定した。"
+            },
+            {
               title: "Lambda@Edgeを活用した柔軟なURL設計",
               description:
                 "Lambda@Edgeを使用して、CloudFrontのリクエストを動的に書き換える仕組みを導入。\nこれにより、静的サイトでありながら柔軟なURL設計が可能となり、SEOやユーザビリティの向上に寄与した。"
@@ -108,7 +112,7 @@ export const PROJECTS_DATA: Project[] = [
             {
               title: "CloudFrontログをGlue/Athenaで可視化基盤化",
               description:
-                "CloudFrontのアクセスログをS3へ自動出力し、Glue Data CatalogとAthenaを組み合わせてパーティション化・Parquet化。\n低コストでクエリ・可視化できる分析基盤をテンプレート化し、運用の属人化を排除した。"
+                "CloudFrontのアクセスログをS3へ自動出力し、Glue Data CatalogとAthenaを組み合わせてパーティション化とParquet化を行った。"
             },
             {
               title: "レイヤーごとにスタックを分離",
@@ -116,7 +120,7 @@ export const PROJECTS_DATA: Project[] = [
                 "フロントエンド、バックエンドを独立したスタックとして管理。\nこれにより、各レイヤーの変更が他に影響を与えず、開発とデプロイの柔軟性が向上した。"
             },
             {
-              title: "アメリカリージョンとの連携",
+              title: "マルチリージョン連携",
               description:
                 "CloudFrontに適用するWAFのデプロイはアメリカリージョン限定であったため、リージョンを跨いだ自動化を実現した。"
             },
