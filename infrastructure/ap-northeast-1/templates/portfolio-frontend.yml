@@ -344,15 +344,39 @@ Resources:
           PARQUET_TABLE: "cloudfront_logs_parquet"
           PARQUET_LOCATION: !Sub "s3://${CloudFrontLogBucket}/cloudfront-parquet/"
 
-  CloudFrontAthenaDailyInsertRule:
-    Type: AWS::Events::Rule
+  CloudFrontAthenaDailyInsertSchedule:
+    Type: AWS::Scheduler::Schedule
     Properties:
       Name: !Sub "${ProjectName}-cf-athena-daily-insert"
-      ScheduleExpression: "cron(15 3 * * ? *)" # 毎日03:15 UTC
+      ScheduleExpression: "cron(0 6 * * ? *)"  # 毎日09:00 JST
+      ScheduleExpressionTimezone: "Asia/Tokyo"  # JSTタイムゾーン指定
       State: ENABLED
-      Targets:
-        - Arn: !GetAtt CloudFrontAthenaDailyInsertFunction.Arn
-          Id: TargetFunctionV1
+      FlexibleTimeWindow:
+        Mode: "OFF"
+      Target:
+        Arn: !GetAtt CloudFrontAthenaDailyInsertFunction.Arn
+        RoleArn: !GetAtt SchedulerExecutionRole.Arn
+
+  # Scheduler用のIAMロールも必要
+  SchedulerExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeLambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: !GetAtt CloudFrontAthenaDailyInsertFunction.Arn
 
   CloudFrontAthenaDailyInsertPermission:
     Type: AWS::Lambda::Permission
