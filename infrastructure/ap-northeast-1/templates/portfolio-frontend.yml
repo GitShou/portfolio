@@ -383,8 +383,8 @@ Resources:
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref CloudFrontAthenaDailyInsertFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt CloudFrontAthenaDailyInsertRule.Arn
+      Principal: scheduler.amazonaws.com
+      SourceArn: !GetAtt CloudFrontAthenaDailyInsertSchedule.Arn
   StaticSiteBucketNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
