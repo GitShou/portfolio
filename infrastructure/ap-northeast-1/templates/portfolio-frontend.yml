@@ -409,6 +409,16 @@ Resources:
       Tags:
         project: !Ref ProjectName
 
+  CloudFrontDistributionDomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/cloudfront/distribution-domain-name"
+      Type: String
+      Value: !GetAtt CloudFrontDistribution.DomainName
+      Description: !Sub "${ProjectName} CloudFront distribution domain name"
+      Tags:
+        project: !Ref ProjectName
+
   PortfolioAliasRecordA:
     Type: AWS::Route53::RecordSet
     DependsOn: CloudFrontDistribution
@@ -442,12 +452,14 @@ Resources:
   PortfolioPrimaryHealthCheck:
     Type: AWS::Route53::HealthCheck
     Properties:
-      Type: HTTPS
-      ResourcePath: !Ref HealthCheckPath
-      FullyQualifiedDomainName: !Ref Route53RecordName
-      Port: 443
-      RequestInterval: 30
-      FailureThreshold: 3
+      HealthCheckConfig:
+        Type: HTTPS
+        ResourcePath: !Ref HealthCheckPath
+        FullyQualifiedDomainName: !Ref Route53RecordName
+        Port: 443
+        RequestInterval: 30
+        FailureThreshold: 3
+        EnableSNI: true
 
 Outputs:
   StaticSiteBucketName:

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Standalone error page stack with Route53 secondary failover'
+Description: 'Standalone error page stack (S3 + CloudFront)'
 
 Parameters:
   ProjectName:
@@ -10,16 +10,19 @@ Parameters:
     Type: String
     Description: FQDN for the record (no trailing dot)
     Default: "maintenance.shou-tech.work"
-  HostedZoneId:
+  CloudFrontAcmCertificateArn:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: "Route53 hosted zone ID for the domain (same as portfolio-frontend)"
-    Default: "/Route53/hostzone/id"
+    Description: ACM certificate ARN for CloudFront (issued in us-east-1), stored in SSM Parameter Store
+    Default: "/acm/mydomain/arn"
 
 Resources:
   ErrorPageBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${ProjectName}-error-pages"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
       OwnershipControls:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
@@ -54,6 +57,8 @@ Resources:
       DistributionConfig:
         Enabled: true
         DefaultRootObject: error.html
+        Aliases:
+          - !Ref Route53RecordName
         Origins:
           - Id: ErrorPageOrigin
             DomainName: !GetAtt ErrorPageBucket.RegionalDomainName
@@ -63,32 +68,43 @@ Resources:
           TargetOriginId: ErrorPageOrigin
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CloudFrontAcmCertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
 
-  SecondaryRecordA:
-    Type: AWS::Route53::RecordSet
+  ErrorPageBucketNameParameter:
+    Type: AWS::SSM::Parameter
     Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName 
-      Type: A
-      SetIdentifier: "Secondary"
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !GetAtt ErrorPageDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2
-        EvaluateTargetHealth: false
+      Name: !Sub "/${ProjectName}/error/page/s3/bucket-name"
+      Type: String
+      Value: !Ref ErrorPageBucket
+      Description: !Sub "${ProjectName} error page bucket name"
+      Tags:
+        project: !Ref ProjectName
 
-  SecondaryRecordAAAA:
-    Type: AWS::Route53::RecordSet
+  ErrorPageDistributionIdParameter:
+    Type: AWS::SSM::Parameter
     Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName
-      Type: AAAA
-      SetIdentifier: "Secondary-ipv6"
-      Failover: SECONDARY
-      AliasTarget:
-        DNSName: !GetAtt ErrorPageDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2
-        EvaluateTargetHealth: false
+      Name: !Sub "/${ProjectName}/error/page/cloudfront/distribution-id"
+      Type: String
+      Value: !Ref ErrorPageDistribution
+      Description: !Sub "${ProjectName} error page CloudFront distribution id"
+      Tags:
+        project: !Ref ProjectName
+
+  ErrorPageDistributionDomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/error/page/cloudfront/distribution-domain-name"
+      Type: String
+      Value: !GetAtt ErrorPageDistribution.DomainName
+      Description: !Sub "${ProjectName} error page CloudFront distribution domain name"
+      Tags:
+        project: !Ref ProjectName
 
 Outputs:
   ErrorPageDistributionDomainName:

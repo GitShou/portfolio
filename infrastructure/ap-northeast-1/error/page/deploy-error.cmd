@@ -9,7 +9,7 @@ set "AWS_PROFILE=default"
 
 set "TEMPLATE_FILE=%~dp0error-template.yml"
 set "ERROR_HTML=%~dp0error.html"
-set "BUCKET_NAME="
+set "BUCKET_NAME=portfolio5352-error-pages"
 
 
 echo [INFO] Deploying CloudFormation stack "%STACK_NAME%"...
