@@ -31,6 +31,10 @@ Parameters:
     Type: String
     Description: 作成するサブドメインのFQDN（末尾のドットは不要）
     Default: "portfolio.shou-tech.work"
+  HealthCheckPath:
+    Type: String
+    Description: プライマリ用ヘルスチェックパス
+    Default: "/"
 
 Resources:
   StaticSiteBucket:
@@ -412,6 +416,9 @@ Resources:
       HostedZoneId: !Ref Route53HostedZoneId
       Name: !Ref Route53RecordName
       Type: A
+      SetIdentifier: "Primary"
+      Failover: PRIMARY
+      HealthCheckId: !Ref PortfolioPrimaryHealthCheck
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
         HostedZoneId: Z2FDTNDATAQYW2
@@ -424,10 +431,23 @@ Resources:
       HostedZoneId: !Ref Route53HostedZoneId
       Name: !Ref Route53RecordName
       Type: AAAA
+      SetIdentifier: "Primary-ipv6"
+      Failover: PRIMARY
+      HealthCheckId: !Ref PortfolioPrimaryHealthCheck
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: false
+
+  PortfolioPrimaryHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      Type: HTTPS
+      ResourcePath: !Ref HealthCheckPath
+      FullyQualifiedDomainName: !Ref Route53RecordName
+      Port: 443
+      RequestInterval: 30
+      FailureThreshold: 3
 
 Outputs:
   StaticSiteBucketName:
