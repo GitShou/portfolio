@@ -1,27 +1,31 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Route53 failover (PRIMARY/SECONDARY) for maintenance domain'
+Description: 'Route53 records and failover routing'
 
 Parameters:
   ProjectName:
     Type: String
     Description: Project name (resource prefix)
     Default: "portfolio5352"
-  Route53RecordName:
+  PortfolioRecordName:
     Type: String
-    Description: FQDN for the record (no trailing dot)
-    Default: "maintenance.shou-tech.work"
+    Description: Portfolio FQDN (no trailing dot)
+    Default: "portfolio.shou-tech.work"
   HostedZoneId:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: Route53 hosted zone ID stored in SSM Parameter Store
     Default: "/Route53/hostzone/id"
-  PrimaryDistributionDomainName:
+  PortfolioDistributionDomainName:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: CloudFront distribution domain name (PRIMARY), stored in SSM Parameter Store
+    Description: Portfolio CloudFront distribution domain name stored in SSM Parameter Store
     Default: "/portfolio5352/cloudfront/distribution-domain-name"
-  SecondaryDistributionDomainName:
+  ErrorPageDistributionDomainName:
     Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: CloudFront distribution domain name (SECONDARY), stored in SSM Parameter Store
+    Description: Error page CloudFront distribution domain name stored in SSM Parameter Store
     Default: "/portfolio5352/error/page/cloudfront/distribution-domain-name"
+  HealthCheckDomainName:
+    Type: String
+    Description: Health check target domain name (typically portfolio FQDN)
+    Default: "portfolio.shou-tech.work"
   HealthCheckPath:
     Type: String
     Description: Health check path for PRIMARY target
@@ -33,64 +37,64 @@ Resources:
     Properties:
       HealthCheckConfig:
         Type: HTTPS
-        FullyQualifiedDomainName: !Ref Route53RecordName
+        FullyQualifiedDomainName: !Ref HealthCheckDomainName
         ResourcePath: !Ref HealthCheckPath
         Port: 443
         RequestInterval: 30
         FailureThreshold: 3
         EnableSNI: true
 
-  PrimaryRecordA:
+  PortfolioPrimaryRecordA:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName
+      Name: !Ref PortfolioRecordName
       Type: A
       SetIdentifier: "Primary"
       Failover: PRIMARY
       HealthCheckId: !Ref PortfolioPrimaryHealthCheck
       AliasTarget:
-        DNSName: !Ref PrimaryDistributionDomainName
+        DNSName: !Ref PortfolioDistributionDomainName
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: false
 
-  PrimaryRecordAAAA:
+  PortfolioPrimaryRecordAAAA:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName
+      Name: !Ref PortfolioRecordName
       Type: AAAA
       SetIdentifier: "Primary-ipv6"
       Failover: PRIMARY
       HealthCheckId: !Ref PortfolioPrimaryHealthCheck
       AliasTarget:
-        DNSName: !Ref PrimaryDistributionDomainName
+        DNSName: !Ref PortfolioDistributionDomainName
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: false
 
-  SecondaryRecordA:
+  MaintenanceSecondaryRecordA:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName
+      Name: !Ref PortfolioRecordName
       Type: A
       SetIdentifier: "Secondary"
       Failover: SECONDARY
       AliasTarget:
-        DNSName: !Ref SecondaryDistributionDomainName
+        DNSName: !Ref ErrorPageDistributionDomainName
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: false
 
-  SecondaryRecordAAAA:
+  MaintenanceSecondaryRecordAAAA:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Ref Route53RecordName
+      Name: !Ref PortfolioRecordName
       Type: AAAA
       SetIdentifier: "Secondary-ipv6"
       Failover: SECONDARY
       AliasTarget:
-        DNSName: !Ref SecondaryDistributionDomainName
+        DNSName: !Ref ErrorPageDistributionDomainName
         HostedZoneId: Z2FDTNDATAQYW2
         EvaluateTargetHealth: false
 
@@ -108,4 +112,3 @@ Outputs:
   HealthCheckId:
     Description: Route53 health check id
     Value: !Ref PortfolioPrimaryHealthCheck
-

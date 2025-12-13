@@ -6,9 +6,9 @@ Parameters:
     Type: String
     Description: Project name (resource prefix)
     Default: "portfolio5352"
-  Route53RecordName:
+  MaintenanceRecordName:
     Type: String
-    Description: FQDN for the record (no trailing dot)
+    Description: Maintenance FQDN (no trailing dot)
     Default: "maintenance.shou-tech.work"
   CloudFrontAcmCertificateArn:
     Type: 'AWS::SSM::Parameter::Value<String>'
@@ -58,7 +58,7 @@ Resources:
         Enabled: true
         DefaultRootObject: error.html
         Aliases:
-          - !Ref Route53RecordName
+          - !Ref MaintenanceRecordName
         Origins:
           - Id: ErrorPageOrigin
             DomainName: !GetAtt ErrorPageBucket.RegionalDomainName
