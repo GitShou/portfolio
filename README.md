@@ -6,15 +6,15 @@
 - **静的フロントエンド**: `frontend/` の Next.js は `npm run build && npm run export` で `out/` を生成し、`scripts/prepare-static-paths.ts` で `/projects/123/` のディレクトリ配信に対応した上で S3 + CloudFront へ配置します。
 - **サーバレスバックエンド**: `infrastructure/ap-northeast-1/templates/portfolio-backend.yml` が API Gateway + Lambda (Node.js 22) + DynamoDB を定義し、SSM Parameter Store に API Base URL を登録するカスタムリソースも同梱しています。
 - **データ駆動のコンテンツ**: `infrastructure/ap-northeast-1/data/ProjectData.ts` が唯一の正データ。ローカルは json-server、AWS では DynamoDB 経由で同じデータを配信します。
-- **多段リージョン構成**: us-east-1 に WAF/Lambda@Edge (`infrastructure/us-east-1/templates/CloudFrontWafWebAcl.yml`) を配置し、ap-northeast-1 のフロントエンド・スタックから SSM 経由で参照します。
-- **完全自動パイプライン**: `Pipeline/template/portfolio-codepipeline-*.yml` で CodePipeline/CodeBuild を IaC 化。バックエンドの打鍵、フロントビルド、Playwright E2E、静的ファイル配信、DynamoDB Seed までをコードで再現できます。
+- **多段リージョン構成**: us-east-1 に WAF/Lambda@Edge (`infrastructure/us-east-1/templates/CloudFrontWafWebAcl.yml`) を配置し、ap-northeast-1 の Edge スタック (`infrastructure/ap-northeast-1/templates/route53-template.yml`) が SSM 経由で参照して CloudFront / Route53 を構築します。
+- **完全自動パイプライン**: `Pipeline/template/portfolio-codepipeline-*.yml` で CodePipeline/CodeBuild を IaC 化。テンプレートのパッケージング、バックエンド適用、フロントビルド (Playwright E2E)、静的ファイル配信、DynamoDB Seed までをコードで再現できます。
 
 ## フォルダ構成
-- `frontend/` – Next.js 15 + Chakra UI。`tests/e2e` (Playwright) や `buildspec/` も格納。
-- `infrastructure/` – SAM/CloudFormation テンプレート、Lambda ソース、CodeBuild buildspec、シードスクリプト、設計資料 (draw.io)。
-- `Pipeline/` – CodePipeline テンプレート (ap-northeast-1 用 / us-east-1 用)。
+- `frontend/` – Next.js 15 + Chakra UI (詳細: `frontend/README.md`)。
+- `infrastructure/` – IaC / Lambda / buildspec / スクリプト (詳細: `infrastructure/README.md`)。
+- `Pipeline/` – CodePipeline テンプレート (詳細: `Pipeline/README.md`)。
 - `references/` – 公開用レジュメなどポートフォリオに付随する資料。
-- `scripts/` – CloudWatch Logs 収集などの補助 PowerShell/Node スクリプト。
+- `scripts/` – 補助スクリプト (詳細: `scripts/README.md`)。
 
 ## ローカル開発フロー
 1. `cd frontend`
@@ -31,21 +31,23 @@
   `infrastructure/us-east-1/templates/CloudFrontWafWebAcl.yml` を SAM/CloudFormation でデプロイ → WebACL ARN と Lambda@Edge Version ARN を SSM (例: `/portfolio/waf/arn`, `/portfolio/ViewerRequestRewriteFunctionVersion/arn`) に格納します。`buildspec/packaging-template.yml` + `buildspec-put-waf-arn.yml` を CodeBuild から呼び出すことで同作業を自動化できます。
 - **ap-northeast-1**  
   - `templates/portfolio-backend.yml`: DynamoDB (`${ProjectName}-projects-v1`)、API Gateway、5 種の Lambda、SSM Parameter Writer カスタムリソースなどを定義。
-  - `templates/portfolio-frontend.yml`: 静的サイト S3、CloudFront、OAI、Route53 レコードを作成し、us-east-1 で登録済みの WebACL / Lambda@Edge ARN を SSM 経由で参照。
+  - `templates/portfolio-frontend.yml`: 静的サイト用 S3 バケットを作成し、バケット名を SSM (`/${ProjectName}/s3/static-site-bucket-name`) に登録。
+  - `templates/error-template.yml`: エラーページ用 S3 バケットを作成し、バケット名を SSM (`/${ProjectName}/error/page/s3/bucket-name`) に登録。
+  - `templates/route53-template.yml`: Route53 + CloudFront (WAF/Lambda@Edge/ACM は SSM 参照) を作成し、CloudFront Distribution ID / DomainName を SSM (`/${ProjectName}/edge/cloudfront/...`) に登録。
 - **CodePipeline**  
   `Pipeline/template/portfolio-codepipeline-JP.yml` (ap-northeast-1) と `...US.yml` で Source → Build(CloudFormation) → Build(Next.js / Playwright) → Deploy(S3/CloudFront) → Seed(DynamoDB) の 3 ステージ構成を IaC 化しています。各ステージで使う buildspec は `infrastructure/ap-northeast-1/buildspec/` と `frontend/buildspec/` に配置。
 
 ### BuildSpec の役割 (抜粋)
-- `infrastructure/ap-northeast-1/buildspec-cfn.yml`  
-  Lambda 単体テスト → `aws cloudformation package` → フロント/Seed ファイルをアーティファクト化。
-- `buildspec-pre-cfn.yml`  
+- `infrastructure/ap-northeast-1/buildspec/buildspec-cfn.yml`  
+  Lambda 単体テスト → `aws cloudformation package` (backend/frontend/route53) → `PackagedTemplates` / Web / Seed 用アーティファクトを生成。
+- `infrastructure/ap-northeast-1/buildspec/buildspec-pre-cfn.yml`  
   失敗スタックのクリーンアップ (ROLLBACK/FAILED) を自動化して再デプロイ性を確保。
-- `buildspec-seed-projects.yml`  
+- `infrastructure/ap-northeast-1/buildspec/buildspec-seed-projects.yml`  
   `PROJECTS_API_BASE_URL` を SSM から取得し、TypeScript でコンパイルした `scripts/seed-projects.ts` を実行。
-- `frontend/buildspec-nextjs.yml`  
-  `.env.production` を CodeBuild 上で生成 → Playwright スモークテスト → `npm run build` → `npm run postbuild`。
-- `frontend/buildspec-deploy-contents.yml`  
-  `out/` を S3 Sync、ディレクトリアクセス用の `index.html` エイリアス作成、CloudFront Invalidation を実施。
+- `frontend/buildspec/buildspec-nextjs.yml`  
+  `.env.production` を CodeBuild 上で生成 → Playwright スモークテスト → `npm run build` → `buildspec-deploy-contents.yml` をアーティファクトへ同梱。
+- `frontend/buildspec/buildspec-deploy-contents.yml`  
+  `out/` を S3 Sync、ディレクトリアクセス用の `index.html` エイリアス作成、(可能なら) CloudFront Invalidation を実施。Distribution ID は SSM (`/${ProjectName}/edge/cloudfront/distribution-id`) から解決し、未作成の場合はスキップします。
 
 ## データとシード
 1. プロジェクト情報は `infrastructure/ap-northeast-1/data/ProjectData.ts` で TypeScript として定義。
@@ -65,7 +67,7 @@ SigV4 署名が必要なため、AWS CLI と同じ認証情報が使える環境
 ## テスト
 - `npm run lint` – Next.js プロジェクト内で ESLint を実行。
 - `npm run test:e2e` – Playwright。json-server + Next.js Dev サーバー起動後に実行。
-- Lambda は `infrastructure/ap-northeast-1/Lambda` で `npm install && npm test`。CodePipeline でも `buildspec-cfn.yml` 内で同ユニットテストを回します。
+- Lambda は `infrastructure/ap-northeast-1/Lambda` で `npm install && npm test`。CodePipeline でも `infrastructure/ap-northeast-1/buildspec/buildspec-cfn.yml` 内で同ユニットテストを回します。
 
 ## 参考資料
 - `infrastructure/docs/アーキテクチャ図.drawio` – 全体構成図。

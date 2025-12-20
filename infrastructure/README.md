@@ -12,7 +12,7 @@
 ### ap-northeast-1/
 | フォルダ | 役割 |
 | --- | --- |
-| `templates/` | SAM/CloudFormation テンプレート。`portfolio-backend.yml` と `portfolio-frontend.yml` が主。 |
+| `templates/` | SAM/CloudFormation テンプレート。`portfolio-backend.yml` (Backend)、`portfolio-frontend.yml` (静的サイト用バケット)、`error-template.yml` (エラーページ用バケット)、`route53-template.yml` (Route53+CloudFront) を配置。 |
 | `buildspec/` | CodeBuild で使う BuildSpec。`buildspec-cfn.yml`、`buildspec-pre-cfn.yml`、`buildspec-seed-projects.yml` など。 |
 | `Lambda/` | 各 Lambda 関数の Node.js 22 ソース (`get-projects`, `create-project`, `parameter-writer-wrapper` など)。`npm test` で DynamoDB モックを用いたユニットテストを実行できます。 |
 | `scripts/` | `seed-projects.ts` を含む TypeScript スクリプト。`tsconfig.seed.json` でコンパイル設定を分離。 |
@@ -25,12 +25,18 @@
   - API Gateway (ステージ別ログ、IAM 認証)。
   - `ParameterWriterWrapperFunction` で SSM に `/ProjectName/api/base-url` を自動登録。
 - `portfolio-frontend.yml`
-  - 静的サイト用 S3 バケット、CloudFront Distribution、OAI。
-  - WAF WebACL ARN / Lambda@Edge Version ARN / ACM 証明書 ARN / Route53 HostZone は SSM パラメータから取得。
-  - Route53 A/AAAA レコードを CloudFront にエイリアス。
+  - 静的サイト用 S3 バケットを作成。
+  - バケット名を SSM (`/${ProjectName}/s3/static-site-bucket-name`) に登録。
+- `error-template.yml`
+  - エラーページ用 S3 バケットを作成。
+  - バケット名を SSM (`/${ProjectName}/error/page/s3/bucket-name`) に登録。
+- `route53-template.yml`
+  - Route53 + CloudFront (CloudFront ログ用 S3、Glue/Athena、日次 Parquet 変換の Lambda/EventBridge を含む) を作成。
+  - WAF WebACL ARN / Lambda@Edge Version ARN / ACM 証明書 ARN / Hosted Zone ID / バケット名は SSM パラメータから取得。
+  - CloudFront Distribution ID / DomainName を SSM (`/${ProjectName}/edge/cloudfront/...`) に登録。
 
 #### BuildSpec まとめ
-- `buildspec-cfn.yml`: Lambda 単体テスト → SAM Package → `frontend/` のソースや Seed ファイルをアーティファクト化。
+- `buildspec-cfn.yml`: Lambda 単体テスト → `aws cloudformation package` (backend/frontend/route53) → `PackagedTemplates` / `WebArtifact` / `DataArtifact` などのアーティファクト化。
 - `buildspec-pre-cfn.yml`: ROLLBACK/FAILED の Stack を削除して再デプロイを安全に実施。
 - `buildspec-seed-projects.yml`: `PROJECTS_API_BASE_URL` を Parameter Store から取得し、API 経由で DynamoDB を upsert。
 
@@ -52,7 +58,9 @@
 | `/portfolio/ViewerRequestRewriteFunctionVersion/arn` | Lambda@Edge バージョン ARN | `arn:aws:lambda:us-east-1:...:function:...:live` |
 | `/portfolio5352/api/base-url` | API Gateway のベース URL。ParameterWriterWrapper が自動登録 | `https://xxxx.execute-api.ap-northeast-1.amazonaws.com/prod` |
 | `/portfolio5352/s3/static-site-bucket-name` | 静的サイトバケット名 | `portfolio5352-static-site` |
-| `/portfolio5352/cloudfront/distribution-id` | CloudFront Distribution ID | `E1234567890` |
+| `/portfolio5352/error/page/s3/bucket-name` | エラーページバケット名 | `portfolio5352-error-pages` |
+| `/portfolio5352/edge/cloudfront/distribution-id` | CloudFront Distribution ID | `E1234567890` |
+| `/portfolio5352/edge/cloudfront/distribution-domain-name` | CloudFront Distribution DomainName | `xxxx.cloudfront.net` |
 | `/acm/mydomain/arn` | CloudFront 用 ACM 証明書 (us-east-1) | `arn:aws:acm:us-east-1:...` |
 | `/Route53/hostzone/id` | Route53 Hosted Zone ID | `Z0123456789ABC` |
 | `/portfolio/SSM/parameter-writer/function-arn` | 既存の Parameter Writer Lambda の ARN | `arn:aws:lambda:ap-northeast-1:...:function:parameter-writer` |
@@ -66,11 +74,13 @@
 2. **ap-northeast-1 - Backend**  
    `sam deploy --template-file infrastructure/ap-northeast-1/templates/portfolio-backend.yml --stack-name Portfolio-Backend --capabilities CAPABILITY_NAMED_IAM`  
    スタック完了後に SSM の `/ProjectName/api/base-url` が自動で作成されます。
-3. **ap-northeast-1 - Frontend**  
-   SSM へ保存済みの WebACL/Lambda@Edge ARN, ACM, Route53 情報をパラメータに渡しつつ `portfolio-frontend.yml` をデプロイ。
-4. **コンテンツ配信**  
-   `frontend/` で `npm run build && npm run export` → `aws s3 sync out/ s3://<bucket> --delete` → `aws cloudfront create-invalidation`。CodePipeline を利用する場合は `buildspec-nextjs.yml` + `buildspec-deploy-contents.yml` が同処理を自動化します。
-5. **データシード**  
+3. **ap-northeast-1 - S3 Buckets**  
+   `portfolio-frontend.yml` (静的サイト) と `error-template.yml` (エラーページ) をデプロイし、S3 バケット名を SSM に登録します。
+4. **ap-northeast-1 - Edge (Route53 + CloudFront)**  
+   `route53-template.yml` をデプロイして Route53 レコードと CloudFront Distribution を作成します (WAF/Lambda@Edge/ACM/HostedZoneId/バケット名は SSM 参照)。作成後、Distribution ID が SSM (`/${ProjectName}/edge/cloudfront/distribution-id`) に保存されます。
+5. **コンテンツ配信**  
+   `frontend/` で `npm run build && npm run export` → `aws s3 sync out/ s3://<bucket> --delete`。CloudFront Invalidation は SSM から Distribution ID を解決できる場合のみ実行します (未作成の場合はスキップ)。CodePipeline を利用する場合は `buildspec-nextjs.yml` + `buildspec-deploy-contents.yml` が同処理を自動化します。
+6. **データシード**  
    `infrastructure/ap-northeast-1/scripts/seed-projects.ts` を実行して DynamoDB を API 経由で upsert。CodePipeline では `buildspec-seed-projects.yml` が行います。
 
 ## シードスクリプトの使い方

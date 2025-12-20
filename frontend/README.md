@@ -18,9 +18,13 @@
 - `npm run lint` : Lint 実行
 - `npm run build` : 本番ビルド
 
+## CI/CD (BuildSpec)
+- `buildspec/buildspec-nextjs.yml`: `.env.production` を生成 → Playwright E2E → `npm run build` → `out/` と `buildspec-deploy-contents.yml` をアーティファクト化
+- `buildspec/buildspec-deploy-contents.yml`: `out/` を S3 に `sync` し、必要に応じて CloudFront Invalidation を実行 (Distribution ID は SSM `/${ProjectName}/edge/cloudfront/distribution-id` から解決し、未作成ならスキップ)
+
 ## CloudFront ログ
-- CloudFront Distribution は `ProjectName-cloudfront-logs` バケットの `cloudfront/` プレフィックスへアクセスログを出力（ライフサイクルで30日保持）
-- 同一テンプレートで Glue Database/WorkGroup/テーブルを作成し、Athena から `cloudfront_logs_raw` と Parquet 化済み `cloudfront_logs_parquet` を参照
+- CloudFront Distribution は Edge スタック `infrastructure/ap-northeast-1/templates/route53-template.yml` で定義され、`ProjectName-cloudfront-logs` バケットの `cloudfront/` プレフィックスへアクセスログを出力（ライフサイクルで30日保持）
+- 同テンプレートで Glue Database/WorkGroup/テーブルを作成し、Athena から `cloudfront_logs_raw` と Parquet 化済み `cloudfront_logs_parquet` を参照
 - EventBridge → Lambda (`CloudFrontAthenaDailyInsertFunction`) が毎日 03:15 UTC に実行され、日付パーティションの追加と Parquet 変換を行い `cloudfront-parquet/` へ配置
 - Athena のクエリ結果は `${ProjectName}-athena-results/cloudfront/` に保存されるので、WorkGroup `${ProjectName}-cf-workgroup` を選んで利用
 
