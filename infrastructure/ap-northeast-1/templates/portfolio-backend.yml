@@ -156,16 +156,6 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
-  ProjectVPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: 10.0.0.0/16
-      EnableDnsSupport: true
-      EnableDnsHostnames: true
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:

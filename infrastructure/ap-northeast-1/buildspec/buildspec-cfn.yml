@@ -59,6 +59,13 @@ artifacts:
       discard-paths: no
       name: DataArtifact
 
+    ErrorArtifact:
+      base-directory: infrastructure/ap-northeast-1/error/page
+      files:
+        - 'error.html'
+      discard-paths: yes
+      name: ErrorArtifact
+
     CleanupCfnArtifact:
       base-directory: infrastructure/ap-northeast-1/
       files:

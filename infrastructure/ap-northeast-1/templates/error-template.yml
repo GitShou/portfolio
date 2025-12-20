@@ -1,19 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Standalone error page stack (S3 + CloudFront)'
+Description: 'Standalone error page stack (S3 only)'
 
 Parameters:
   ProjectName:
     Type: String
     Description: Project name (resource prefix)
     Default: "portfolio5352"
-  MaintenanceRecordName:
-    Type: String
-    Description: Maintenance FQDN (no trailing dot)
-    Default: "maintenance.shou-tech.work"
-  CloudFrontAcmCertificateArn:
-    Type: 'AWS::SSM::Parameter::Value<String>'
-    Description: ACM certificate ARN for CloudFront (issued in us-east-1), stored in SSM Parameter Store
-    Default: "/acm/mydomain/arn"
 
 Resources:
   ErrorPageBucket:
@@ -32,50 +24,6 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  ErrorPageOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub "${ProjectName} error page OAI"
-
-  ErrorPageBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref ErrorPageBucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${ErrorPageOAI}"
-            Action: "s3:GetObject"
-            Resource: !Sub "${ErrorPageBucket.Arn}/*"
-
-  ErrorPageDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties:
-      DistributionConfig:
-        Enabled: true
-        DefaultRootObject: error.html
-        Aliases:
-          - !Ref MaintenanceRecordName
-        Origins:
-          - Id: ErrorPageOrigin
-            DomainName: !GetAtt ErrorPageBucket.RegionalDomainName
-            S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${ErrorPageOAI}"
-        DefaultCacheBehavior:
-          TargetOriginId: ErrorPageOrigin
-          ViewerProtocolPolicy: redirect-to-https
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
-        ViewerCertificate:
-          AcmCertificateArn: !Ref CloudFrontAcmCertificateArn
-          SslSupportMethod: sni-only
-          MinimumProtocolVersion: TLSv1.2_2021
-      Tags:
-        - Key: project
-          Value: !Ref ProjectName
-
   ErrorPageBucketNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -86,30 +34,7 @@ Resources:
       Tags:
         project: !Ref ProjectName
 
-  ErrorPageDistributionIdParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/error/page/cloudfront/distribution-id"
-      Type: String
-      Value: !Ref ErrorPageDistribution
-      Description: !Sub "${ProjectName} error page CloudFront distribution id"
-      Tags:
-        project: !Ref ProjectName
-
-  ErrorPageDistributionDomainNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/error/page/cloudfront/distribution-domain-name"
-      Type: String
-      Value: !GetAtt ErrorPageDistribution.DomainName
-      Description: !Sub "${ProjectName} error page CloudFront distribution domain name"
-      Tags:
-        project: !Ref ProjectName
-
 Outputs:
-  ErrorPageDistributionDomainName:
-    Description: "Error page CloudFront URL"
-    Value: !GetAtt ErrorPageDistribution.DomainName
   ErrorPageBucketName:
     Description: "Error page S3 bucket name"
     Value: !Ref ErrorPageBucket
