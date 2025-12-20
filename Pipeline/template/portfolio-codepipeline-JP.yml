@@ -83,7 +83,7 @@ Resources:
               InputArtifacts:
                 - Name: SourceArtifact
               OutputArtifacts:
-                - Name: SystemArtifact
+                - Name: PackagedTemplates
                 - Name: WebArtifact
                 - Name: DataArtifact
                 - Name: CleanupCfnArtifact
@@ -126,7 +126,7 @@ Resources:
                 Provider: CloudFormation
                 Version: "1"
               InputArtifacts:
-                - Name: SystemArtifact
+                - Name: PackagedTemplates
               OutputArtifacts:
                 - Name: deployed-aws-resources
               Configuration:
@@ -134,7 +134,7 @@ Resources:
                 Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
                 RoleArn: !Ref CloudFormationDeploymentRoleArn
                 StackName: !Ref BackendStackName
-                TemplatePath: SystemArtifact::portfolio-backend.packaged.yml
+                TemplatePath: PackagedTemplates::portfolio-backend.packaged.yml
               RunOrder: 3
             - Name: deploy-frontend-system
               ActionTypeId:
@@ -143,13 +143,13 @@ Resources:
                 Provider: CloudFormation
                 Version: "1"
               InputArtifacts:
-                - Name: SystemArtifact
+                - Name: PackagedTemplates
               Configuration:
                 ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_IAM,CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
                 RoleArn: !Ref CloudFormationDeploymentRoleArn
                 StackName: !Ref FrontendStackName
-                TemplatePath: SystemArtifact::portfolio-frontend.yml
+                TemplatePath: PackagedTemplates::portfolio-frontend.yml
               RunOrder: 3
         - Name: Build
           Actions:

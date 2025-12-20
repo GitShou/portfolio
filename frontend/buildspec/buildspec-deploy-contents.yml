@@ -3,7 +3,8 @@ version: 0.2
 env:
   parameter-store:
     DEPLOY_S3_BUCKET: /portfolio5352/s3/static-site-bucket-name
-    CLOUDFRONT_DISTRIBUTION_ID: /portfolio5352/cloudfront/distribution-id
+  variables:
+    CLOUDFRONT_DISTRIBUTION_ID_SSM_PATH_PRIMARY: /portfolio5352/edge/cloudfront/distribution-id
 
 phases:
   install:
@@ -15,9 +16,21 @@ phases:
           exit 1
         fi
       - |
-        if [ -z "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
-          echo "CLOUDFRONT_DISTRIBUTION_ID environment variable is required." >&2
-          exit 1
+        if [ -z "${CLOUDFRONT_DISTRIBUTION_ID:-}" ]; then
+          echo "Resolving CloudFront distribution id from SSM (optional)"
+          CLOUDFRONT_DISTRIBUTION_ID=$(
+            aws ssm get-parameter \
+              --name "$CLOUDFRONT_DISTRIBUTION_ID_SSM_PATH_PRIMARY" \
+              --query 'Parameter.Value' \
+              --output text 2>/dev/null || true
+          )
+
+          if [ -z "${CLOUDFRONT_DISTRIBUTION_ID:-}" ] || [ "${CLOUDFRONT_DISTRIBUTION_ID}" = "None" ]; then
+            unset CLOUDFRONT_DISTRIBUTION_ID
+            echo "CloudFront distribution id not found; CloudFront invalidation will be skipped."
+          else
+            echo "CloudFront distribution id resolved."
+          fi
         fi
       - |
         if [ ! -d "out" ]; then
@@ -49,8 +62,13 @@ phases:
           echo "Re-uploading ${key} with text/html"
           aws s3 cp "$file" "s3://${DEPLOY_S3_BUCKET}/${key}" --content-type "text/html"
         done
-      - echo "Creating CloudFront invalidation for distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
-      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
+      - |
+        if [ -n "${CLOUDFRONT_DISTRIBUTION_ID:-}" ]; then
+          echo "Creating CloudFront invalidation for distribution ${CLOUDFRONT_DISTRIBUTION_ID}"
+          aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
+        else
+          echo "Skipping CloudFront invalidation (no distribution id available)."
+        fi
 
 artifacts:
   files:
