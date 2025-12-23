@@ -405,7 +405,7 @@ Resources:
     Type: AWS::Scheduler::Schedule
     Properties:
       Name: !Sub "${ProjectName}-cf-athena-daily-insert"
-      ScheduleExpression: "cron(0 6 * * ? *)"  # 毎日09:00 JST
+      ScheduleExpression: "cron(0 6 * * ? *)"  # 毎日06:00 JST
       ScheduleExpressionTimezone: "Asia/Tokyo"  # JSTタイムゾーン指定
       State: ENABLED
       FlexibleTimeWindow:
