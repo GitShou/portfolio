@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 const DEFAULT_BEACON_PATH = "/events/page-view";
@@ -43,7 +43,6 @@ function sendPageView(payload: PageViewPayload): void {
 
 export function PageViewBeacon() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const lastSentRouteRef = useRef<string>("");
   const previousPathRef = useRef<string | null>(null);
 
@@ -56,14 +55,14 @@ export function PageViewBeacon() {
       return;
     }
 
-    const search = searchParams.toString();
-    const routeKey = search ? `${normalizedPath}?${search}` : normalizedPath;
+    const search = window.location.search || "";
+    const routeKey = `${normalizedPath}${search}`;
     if (routeKey === lastSentRouteRef.current) return;
 
     sendPageView({
       eventType: "page_view",
       path: normalizedPath,
-      search: search ? `?${search}` : "",
+      search,
       fromPath: previousPathRef.current,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
@@ -72,7 +71,7 @@ export function PageViewBeacon() {
 
     previousPathRef.current = normalizedPath;
     lastSentRouteRef.current = routeKey;
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }
