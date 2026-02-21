@@ -428,22 +428,17 @@ Resources:
           classification: json
           typeOfData: file
           projection.enabled: "true"
-          projection.year.type: integer
-          projection.year.range: "2020,2100"
-          projection.month.type: integer
-          projection.month.range: "1,12"
-          projection.month.digits: "2"
-          projection.day.type: integer
-          projection.day.range: "1,31"
-          projection.day.digits: "2"
+          projection.dt.type: date
+          projection.dt.format: yyyy-MM-dd
+          projection.dt.range: "2025-01-01,NOW"
+          projection.dt.interval: "1"
+          projection.dt.interval.unit: DAYS
           projection.hour.type: integer
           projection.hour.range: "0,23"
           projection.hour.digits: "2"
-          storage.location.template: !Sub "s3://${BeaconLogBucket}/events/year=${!year}/month=${!month}/day=${!day}/hour=${!hour}/"
+          storage.location.template: !Sub "s3://${BeaconLogBucket}/events/dt=${!dt}/hour=${!hour}/"
         PartitionKeys:
-          - { Name: year, Type: string }
-          - { Name: month, Type: string }
-          - { Name: day, Type: string }
+          - { Name: dt, Type: string }
           - { Name: hour, Type: string }
         StorageDescriptor:
           Columns:
@@ -492,7 +487,7 @@ Resources:
     Type: AWS::Athena::NamedQuery
     Properties:
       Name: !Sub "${ProjectName}-beacon-project-pages-summary"
-      Description: beacon ログからプロジェクトページ遷移をサブネット x UA 単位で集計
+      Description: 直近30日 beacon ログをパーティション絞り込みで集計（サブネット x UA）
       Database: !Ref BeaconLogsDatabase
       WorkGroup: !Ref BeaconAthenaWorkGroup
       QueryString: |
@@ -510,12 +505,13 @@ Resources:
                 source_ip,
                 user_agent,
                 to_path,
-                from_iso8601_timestamp(timestamp) AS event_ts
-            FROM beacon_page_views_raw
-            WHERE event_type = 'page_view'
-              AND tracked = true
-              AND to_path LIKE '/projects/%'
-              AND from_iso8601_timestamp(timestamp) >= current_timestamp - INTERVAL '30' DAY
+                try(from_iso8601_timestamp(timestamp)) AS event_ts
+            FROM beacon_page_views_raw b
+            WHERE b.event_type = 'page_view'
+              AND b.tracked = true
+              AND b.to_path LIKE '/projects/%'
+              AND b.dt BETWEEN date_format(date_add('day', -29, current_date), '%Y-%m-%d')
+                          AND date_format(current_date, '%Y-%m-%d')
         )
         SELECT
             ip_subnet,
@@ -541,6 +537,8 @@ Resources:
             END AS browser,
             user_agent AS agent
         FROM filtered
+        WHERE event_ts IS NOT NULL
+          AND event_ts >= current_timestamp - INTERVAL '30' DAY
         GROUP BY ip_subnet, user_agent
         HAVING COUNT(*) >= 10
         ORDER BY min(event_ts) DESC
@@ -549,12 +547,28 @@ Resources:
     Type: AWS::Athena::NamedQuery
     Properties:
       Name: !Sub "${ProjectName}-beacon-project-page-events"
-      Description: 直近30日間のプロジェクトページ遷移イベント一覧
+      Description: 直近30日間のプロジェクトページ遷移イベント一覧（パーティション絞り込み）
       Database: !Ref BeaconLogsDatabase
       WorkGroup: !Ref BeaconAthenaWorkGroup
       QueryString: |
+        WITH filtered AS (
+            SELECT
+                try(from_iso8601_timestamp(b.timestamp)) AS event_ts,
+                b.to_path,
+                b.from_path,
+                b.tracked,
+                b.source_ip,
+                b.user_agent,
+                b.referrer,
+                b.request_id
+            FROM beacon_page_views_raw b
+            WHERE b.event_type = 'page_view'
+              AND b.to_path LIKE '/projects/%'
+              AND b.dt BETWEEN date_format(date_add('day', -29, current_date), '%Y-%m-%d')
+                          AND date_format(current_date, '%Y-%m-%d')
+        )
         SELECT
-            from_iso8601_timestamp(timestamp) AT TIME ZONE 'Asia/Tokyo' AS event_time_jst,
+            event_ts AT TIME ZONE 'Asia/Tokyo' AS event_time_jst,
             to_path,
             from_path,
             tracked,
@@ -562,10 +576,9 @@ Resources:
             user_agent,
             referrer,
             request_id
-        FROM beacon_page_views_raw
-        WHERE event_type = 'page_view'
-          AND to_path LIKE '/projects/%'
-          AND from_iso8601_timestamp(timestamp) >= current_timestamp - INTERVAL '30' DAY
+        FROM filtered
+        WHERE event_ts IS NOT NULL
+          AND event_ts >= current_timestamp - INTERVAL '30' DAY
         ORDER BY event_time_jst DESC
         LIMIT 1000
 

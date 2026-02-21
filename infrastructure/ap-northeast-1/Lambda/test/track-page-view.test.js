@@ -77,7 +77,7 @@ describe("track-page-view handler", () => {
 
     const putObjectInput = createPutObjectCommand.firstCall.args[0];
     expect(putObjectInput.Bucket).to.equal("portfolio-test-beacon-logs");
-    expect(putObjectInput.Key).to.match(/^events\/year=/);
+    expect(putObjectInput.Key).to.match(/^events\/dt=\d{4}-\d{2}-\d{2}\/hour=\d{2}\//);
     expect(putObjectInput.ContentType).to.equal("application/json");
 
     const logged = JSON.parse(logger.log.firstCall.args[0]);

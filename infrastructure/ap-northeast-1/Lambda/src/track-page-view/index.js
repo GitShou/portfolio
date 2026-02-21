@@ -62,9 +62,7 @@ function toDateParts(isoTimestamp) {
   }
 
   return {
-    year: String(date.getUTCFullYear()),
-    month: String(date.getUTCMonth() + 1).padStart(2, "0"),
-    day: String(date.getUTCDate()).padStart(2, "0"),
+    dt: `${String(date.getUTCFullYear())}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`,
     hour: String(date.getUTCHours()).padStart(2, "0"),
   };
 }
@@ -72,7 +70,7 @@ function toDateParts(isoTimestamp) {
 function buildObjectKey({ prefix, timestamp, requestId }) {
   const date = toDateParts(timestamp);
   const safeRequestId = (requestId ?? "req").replace(/[^a-zA-Z0-9-]/g, "_");
-  return `${prefix}year=${date.year}/month=${date.month}/day=${date.day}/hour=${date.hour}/${safeRequestId}-${Date.now()}-${randomUUID()}.json`;
+  return `${prefix}dt=${date.dt}/hour=${date.hour}/${safeRequestId}-${Date.now()}-${randomUUID()}.json`;
 }
 
 async function resolvePutObjectCommandFactory(explicitFactory) {
