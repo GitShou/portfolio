@@ -4,6 +4,7 @@
 
 import { ChakraProvider, extendTheme } from '@chakra-ui/react'
 import { ReactNode } from 'react';
+import { PageViewBeacon } from "@/components/PageViewBeacon";
 
 // 💡 必須ではありませんが、テーマを明示的に定義することで、
 // バージョンの依存関係によるエラーを回避しやすくなります。
@@ -29,6 +30,7 @@ export function Providers({ children }: ProvidersProps) {
     // ChakraProviderで子要素（アプリケーション全体）をラップし、
     // 全体でChakra UIの機能が使えるようにします。
     <ChakraProvider theme={customTheme}>
+      <PageViewBeacon />
       {children}
     </ChakraProvider>
   )

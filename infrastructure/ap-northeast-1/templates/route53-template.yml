@@ -35,6 +35,10 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: Error page S3 bucket name stored in SSM Parameter Store
     Default: "/portfolio5352/error/page/s3/bucket-name"
+  EdgeApiOriginBaseUrlParameter:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Description: Edge(CloudFront API Origin) dedicated base URL stored in SSM Parameter Store
+    Default: "/portfolio5352/edge/api-origin-base-url"
 
 Resources:
   CloudFrontOAI:
@@ -57,13 +61,13 @@ Resources:
         RestrictPublicBuckets: true
       LifecycleConfiguration:
         Rules:
-          - Id: DeleteAfter30Days
+          - Id: DeleteAfter14Days
             Status: Enabled
-            ExpirationInDays: 30
+            ExpirationInDays: 14
             Prefix: cloudfront/
-          - Id: DeleteParquetAfter30Days
+          - Id: DeleteParquetAfter14Days
             Status: Enabled
-            ExpirationInDays: 30
+            ExpirationInDays: 14
             Prefix: cloudfront-parquet/
       Tags:
         - Key: project
@@ -117,6 +121,12 @@ Resources:
             DomainName: !Sub "${ErrorPageBucketName}.s3.${AWS::Region}.amazonaws.com"
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${CloudFrontOAI}"
+          - Id: ApiOrigin
+            DomainName: !Select [2, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]
+            OriginPath: !Join ["", ["/", !Select [3, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              HTTPSPort: 443
         OriginGroups:
           Quantity: 1
           Items:
@@ -136,6 +146,31 @@ Resources:
                 Items:
                   - OriginId: ServiceOrigin
                   - OriginId: ErrorOrigin
+        CacheBehaviors:
+          - PathPattern: /events/*
+            TargetOriginId: ApiOrigin
+            ViewerProtocolPolicy: https-only
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            MinTTL: 0
+            DefaultTTL: 0
+            MaxTTL: 0
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - "*"
+              Cookies:
+                Forward: none
         DefaultCacheBehavior:
           TargetOriginId: OriginFailover
           ViewerProtocolPolicy: https-only

@@ -81,6 +81,28 @@ Resources:
       Tags:
         project: !Ref ProjectName
 
+  BeaconLogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-beacon-logs"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteBeaconLogsAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+            Prefix: events/
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
   ApiAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
@@ -156,6 +178,33 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
+  TrackingLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ProjectName}-tracking-lambda-execution-role"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: TrackPageViewS3PutPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "${BeaconLogBucket.Arn}/*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -206,6 +255,12 @@ Resources:
       ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
       Parameters:
         - name: !Sub "/${ProjectName}/api/base-url"
+          valueFrom:
+            type: apiGatewayBaseUrl
+            logicalId: ProjectApi
+            stage: !Ref ApiStageName
+          type: String
+        - name: !Sub "/${ProjectName}/edge/api-origin-base-url"
           valueFrom:
             type: apiGatewayBaseUrl
             logicalId: ProjectApi
@@ -282,10 +337,266 @@ Resources:
             Method: delete
             RestApiId: !Ref ProjectApi
 
+  TrackPageViewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../Lambda/src/track-page-view/
+      Handler: index.handler
+      Role: !GetAtt TrackingLambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          BEACON_LOG_BUCKET_NAME: !Ref BeaconLogBucket
+          BEACON_LOG_PREFIX: "events/"
+      Events:
+        TrackPageViewPost:
+          Type: Api
+          Properties:
+            Path: /events/page-view
+            Method: post
+            RestApiId: !Ref ProjectApi
+            Auth:
+              Authorizer: NONE
+        TrackPageViewOptions:
+          Type: Api
+          Properties:
+            Path: /events/page-view
+            Method: options
+            RestApiId: !Ref ProjectApi
+            Auth:
+              Authorizer: NONE
+
+  BeaconAthenaResultBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${ProjectName}-beacon-athena-results"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteResultsAfter30Days
+            Status: Enabled
+            ExpirationInDays: 30
+            Prefix: beacon/
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  BeaconAthenaResultBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BeaconAthenaResultBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowAthenaAccess
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - s3:GetBucketLocation
+              - s3:ListBucket
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub "${BeaconAthenaResultBucket.Arn}"
+              - !Sub "${BeaconAthenaResultBucket.Arn}/*"
+
+  BeaconLogsDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Sub "${ProjectName}_beacon_logs"
+        Description: Beacon イベントログ分析用の Glue データベース
+
+  BeaconLogsRawTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref BeaconLogsDatabase
+      TableInput:
+        Name: beacon_page_views_raw
+        Description: S3 に保存されたページビューイベントログ(JSON)
+        TableType: EXTERNAL_TABLE
+        Parameters:
+          classification: json
+          typeOfData: file
+          projection.enabled: "true"
+          projection.year.type: integer
+          projection.year.range: "2020,2100"
+          projection.month.type: integer
+          projection.month.range: "1,12"
+          projection.month.digits: "2"
+          projection.day.type: integer
+          projection.day.range: "1,31"
+          projection.day.digits: "2"
+          projection.hour.type: integer
+          projection.hour.range: "0,23"
+          projection.hour.digits: "2"
+          storage.location.template: !Sub "s3://${BeaconLogBucket}/events/year=${!year}/month=${!month}/day=${!day}/hour=${!hour}/"
+        PartitionKeys:
+          - { Name: year, Type: string }
+          - { Name: month, Type: string }
+          - { Name: day, Type: string }
+          - { Name: hour, Type: string }
+        StorageDescriptor:
+          Columns:
+            - { Name: event_type, Type: string }
+            - { Name: to_path, Type: string }
+            - { Name: from_path, Type: string }
+            - { Name: tracked, Type: boolean }
+            - { Name: source_ip, Type: string }
+            - { Name: user_agent, Type: string }
+            - { Name: referrer, Type: string }
+            - { Name: request_id, Type: string }
+            - { Name: timestamp, Type: string }
+            - { Name: received_at, Type: string }
+          Location: !Sub "s3://${BeaconLogBucket}/events/"
+          InputFormat: org.apache.hadoop.mapred.TextInputFormat
+          OutputFormat: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+          Compressed: false
+          SerdeInfo:
+            SerializationLibrary: org.openx.data.jsonserde.JsonSerDe
+            Parameters:
+              mapping.event_type: eventType
+              mapping.to_path: toPath
+              mapping.from_path: fromPath
+              mapping.source_ip: sourceIp
+              mapping.user_agent: userAgent
+              mapping.request_id: requestId
+              mapping.received_at: receivedAt
+          StoredAsSubDirectories: false
+
+  BeaconAthenaWorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Sub "${ProjectName}-beacon-workgroup"
+      Description: Beacon イベントログ分析用 WorkGroup
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: false
+        ResultConfiguration:
+          OutputLocation: !Sub "s3://${BeaconAthenaResultBucket}/beacon/"
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+
+  BeaconProjectPagesSummaryNamedQuery:
+    Type: AWS::Athena::NamedQuery
+    Properties:
+      Name: !Sub "${ProjectName}-beacon-project-pages-summary"
+      Description: beacon ログからプロジェクトページ遷移をサブネット x UA 単位で集計
+      Database: !Ref BeaconLogsDatabase
+      WorkGroup: !Ref BeaconAthenaWorkGroup
+      QueryString: |
+        WITH filtered AS (
+            SELECT
+                CASE
+                    WHEN regexp_like(source_ip, '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$')
+                        THEN CONCAT(
+                            split_part(source_ip, '.', 1), '.',
+                            split_part(source_ip, '.', 2), '.',
+                            split_part(source_ip, '.', 3), '.0/24'
+                        )
+                    ELSE 'non-ipv4'
+                END AS ip_subnet,
+                source_ip,
+                user_agent,
+                to_path,
+                from_iso8601_timestamp(timestamp) AS event_ts
+            FROM beacon_page_views_raw
+            WHERE event_type = 'page_view'
+              AND tracked = true
+              AND to_path LIKE '/projects/%'
+              AND from_iso8601_timestamp(timestamp) >= current_timestamp - INTERVAL '30' DAY
+        )
+        SELECT
+            ip_subnet,
+            COUNT(*) AS req_cnt,
+            date_format(min(event_ts AT TIME ZONE 'Asia/Tokyo'), '%m月%d日 %H:%i') AS first_access,
+            array_join(
+                slice(array_sort(array_distinct(array_agg(to_path))), 1, 50),
+                ', '
+            ) AS projects_pages,
+            date_diff(
+                'minute',
+                min(event_ts AT TIME ZONE 'Asia/Tokyo'),
+                max(event_ts AT TIME ZONE 'Asia/Tokyo')
+            ) AS duration,
+            COUNT(DISTINCT source_ip) AS unique_ips,
+            CASE
+                WHEN user_agent LIKE '%Chrome%' THEN 'Chrome'
+                WHEN user_agent LIKE '%Firefox%' THEN 'Firefox'
+                WHEN user_agent LIKE '%Safari%' AND user_agent NOT LIKE '%Chrome%' THEN 'Safari'
+                WHEN user_agent LIKE '%Edge%' THEN 'Edge'
+                WHEN lower(user_agent) LIKE '%bot%' OR lower(user_agent) LIKE '%crawler%' THEN 'Bot/Crawler'
+                ELSE 'Other'
+            END AS browser,
+            user_agent AS agent
+        FROM filtered
+        GROUP BY ip_subnet, user_agent
+        HAVING COUNT(*) >= 10
+        ORDER BY min(event_ts) DESC
+
+  BeaconProjectPageEventsNamedQuery:
+    Type: AWS::Athena::NamedQuery
+    Properties:
+      Name: !Sub "${ProjectName}-beacon-project-page-events"
+      Description: 直近30日間のプロジェクトページ遷移イベント一覧
+      Database: !Ref BeaconLogsDatabase
+      WorkGroup: !Ref BeaconAthenaWorkGroup
+      QueryString: |
+        SELECT
+            from_iso8601_timestamp(timestamp) AT TIME ZONE 'Asia/Tokyo' AS event_time_jst,
+            to_path,
+            from_path,
+            tracked,
+            source_ip,
+            user_agent,
+            referrer,
+            request_id
+        FROM beacon_page_views_raw
+        WHERE event_type = 'page_view'
+          AND to_path LIKE '/projects/%'
+          AND from_iso8601_timestamp(timestamp) >= current_timestamp - INTERVAL '30' DAY
+        ORDER BY event_time_jst DESC
+        LIMIT 1000
+
 Outputs:
   ApiEndpoint:
     Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}"
     Description: API Gatewayエンドポイント
+  PageViewEndpoint:
+    Value: !Sub "https://${ProjectApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/events/page-view"
+    Description: ページビューイベント送信エンドポイント
+  BeaconLogBucketName:
+    Value: !Ref BeaconLogBucket
+    Description: ページビューイベントログ保存用S3バケット名
+  BeaconLogsDatabaseName:
+    Value: !Ref BeaconLogsDatabase
+    Description: Beacon イベントログ分析用のGlue Database名
+  BeaconLogsRawTableName:
+    Value: beacon_page_views_raw
+    Description: Beacon イベントログ分析用のGlue Table名
+  BeaconAthenaWorkGroupName:
+    Value: !Ref BeaconAthenaWorkGroup
+    Description: Beacon イベントログ分析用Athena WorkGroup名
+  BeaconAthenaResultBucketName:
+    Value: !Ref BeaconAthenaResultBucket
+    Description: Beacon イベントログ分析用Athena結果バケット名
+  BeaconProjectPagesSummaryNamedQueryId:
+    Value: !Ref BeaconProjectPagesSummaryNamedQuery
+    Description: プロジェクトページ集計用のAthena Named Query ID
+  BeaconProjectPageEventsNamedQueryId:
+    Value: !Ref BeaconProjectPageEventsNamedQuery
+    Description: プロジェクトページ遷移一覧用のAthena Named Query ID
   DynamoDBTableName:
     Value: !Ref ProjectTable
     Description: プロジェクト情報用DynamoDBテーブル名

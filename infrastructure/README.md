@@ -23,7 +23,7 @@
   - DynamoDB (`${ProjectName}-projects-v1`) と 2 つの GSI。
   - Node.js 22 の Lambda 関数 5 種 (CRUD API)。
   - API Gateway (ステージ別ログ、IAM 認証)。
-  - `ParameterWriterWrapperFunction` で SSM に `/ProjectName/api/base-url` を自動登録。
+  - `ParameterWriterWrapperFunction` で SSM に `/ProjectName/api/base-url` と `/ProjectName/edge/api-origin-base-url` を自動登録。
 - `portfolio-frontend.yml`
   - 静的サイト用 S3 バケットを作成。
   - バケット名を SSM (`/${ProjectName}/s3/static-site-bucket-name`) に登録。
@@ -56,7 +56,8 @@
 | --- | --- | --- |
 | `/portfolio/waf/arn` | CloudFront 用 WebACL ARN (us-east-1) | `arn:aws:wafv2:us-east-1:...:global/webacl/...` |
 | `/portfolio/ViewerRequestRewriteFunctionVersion/arn` | Lambda@Edge バージョン ARN | `arn:aws:lambda:us-east-1:...:function:...:live` |
-| `/portfolio5352/api/base-url` | API Gateway のベース URL。ParameterWriterWrapper が自動登録 | `https://xxxx.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| `/portfolio5352/api/base-url` | フロントビルド/シード処理向け API Gateway ベース URL。ParameterWriterWrapper が自動登録 | `https://xxxx.execute-api.ap-northeast-1.amazonaws.com/prod` |
+| `/portfolio5352/edge/api-origin-base-url` | CloudFront の `/events/*` を API Origin に転送するための専用 URL | `https://xxxx.execute-api.ap-northeast-1.amazonaws.com/prod` |
 | `/portfolio5352/s3/static-site-bucket-name` | 静的サイトバケット名 | `portfolio5352-static-site` |
 | `/portfolio5352/error/page/s3/bucket-name` | エラーページバケット名 | `portfolio5352-error-pages` |
 | `/portfolio5352/edge/cloudfront/distribution-id` | CloudFront Distribution ID | `E1234567890` |
@@ -73,7 +74,7 @@
    出力された WebACL ARN / Lambda@Edge ARN を Parameter Store へ保存 (もしくは `buildspec-put-waf-arn.yml` を CodeBuild で実行)。
 2. **ap-northeast-1 - Backend**  
    `sam deploy --template-file infrastructure/ap-northeast-1/templates/portfolio-backend.yml --stack-name Portfolio-Backend --capabilities CAPABILITY_NAMED_IAM`  
-   スタック完了後に SSM の `/ProjectName/api/base-url` が自動で作成されます。
+   スタック完了後に SSM の `/ProjectName/api/base-url` と `/ProjectName/edge/api-origin-base-url` が自動で作成されます。
 3. **ap-northeast-1 - S3 Buckets**  
    `portfolio-frontend.yml` (静的サイト) と `error-template.yml` (エラーページ) をデプロイし、S3 バケット名を SSM に登録します。
 4. **ap-northeast-1 - Edge (Route53 + CloudFront)**  
