@@ -205,6 +205,58 @@ Resources:
         - Key: project
           Value: !Ref ProjectName
 
+  BeaconPageViewApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "/${ProjectName}/edge/beacon/api-key/secret"
+      Description: !Sub "${ProjectName} beacon page-view API key source secret"
+      GenerateSecretString:
+        ExcludePunctuation: true
+        PasswordLength: 48
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  BeaconPageViewApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub "${ProjectName}-beacon-page-view-api-key"
+      Description: !Sub "${ProjectName} beacon page-view API key"
+      Enabled: true
+      Value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  BeaconPageViewUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub "${ProjectName}-beacon-page-view-usage-plan"
+      Description: !Sub "${ProjectName} usage plan for beacon page-view endpoint"
+      ApiStages:
+        - ApiId: !Ref ProjectApi
+          Stage: !Ref ApiStageName
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  BeaconPageViewUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref BeaconPageViewApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref BeaconPageViewUsagePlan
+
+  BeaconPageViewApiKeyParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${ProjectName}/edge/beacon/api-key"
+      Description: !Sub "${ProjectName} beacon page-view API key for CloudFront origin"
+      Type: SecureString
+      Value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
+      Tags:
+        project: !Ref ProjectName
+
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -251,6 +303,7 @@ Resources:
     Type: Custom::ParameterWriter
     DependsOn:
       - ProjectApi
+      - BeaconPageViewApiKeyParameter
     Properties:
       ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
       Parameters:
@@ -356,6 +409,7 @@ Resources:
             RestApiId: !Ref ProjectApi
             Auth:
               Authorizer: NONE
+              ApiKeyRequired: true
         TrackPageViewOptions:
           Type: Api
           Properties:
