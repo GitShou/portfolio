@@ -230,6 +230,8 @@ Resources:
 
   BeaconPageViewUsagePlan:
     Type: AWS::ApiGateway::UsagePlan
+    DependsOn:
+      - ProjectApiStage
     Properties:
       UsagePlanName: !Sub "${ProjectName}-beacon-page-view-usage-plan"
       Description: !Sub "${ProjectName} usage plan for beacon page-view endpoint"
