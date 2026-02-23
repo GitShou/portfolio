@@ -128,7 +128,7 @@ Resources:
           - Id: ApiOrigin
             DomainName: !Select [2, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]
             OriginPath: !Join ["", ["/", !Select [3, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]]]
-            CustomHeaders:
+            OriginCustomHeaders:
               Quantity: 1
               Items:
                 - HeaderName: x-api-key
