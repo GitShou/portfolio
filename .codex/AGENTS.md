@@ -25,6 +25,30 @@
 - E2E（Playwright）：`cd frontend && npm run test:e2e`
 - AWS へのデプロイは CodePipeline/CodeBuild を主経路とし、手動デプロイ手順は `README.md` / `infrastructure/README.md` に記載します。
 
+## デプロイ委任時の運用フロー（最新）
+- `main` への push をデプロイ起点とする。
+- パイプラインは次の順で追跡する。
+- 1. us-east-1 の `Portfolio-pipeline`
+- 2. ap-northeast-1 の `portfolio`（1の成功後に引き継がれる）
+- 監視対象は実行ID、ステージ、失敗理由（CodePipeline / CloudFormationイベント）まで確認する。
+
+### 失敗時の判断基準
+- 記述形式や構文など、修正方法が明確で実質1択のエラーは自動修正して再デプロイしてよい。
+- 例：CloudFormationのプロパティ名誤り、配列/オブジェクト形式ミス、明白なtypo。
+- アーキテクチャや処理フロー全体に関わる判断が必要なエラーは中断し、原因と修正案をレポートする。
+
+### S3再構築エラー時の特例
+- デプロイ中に「バケット未空で削除/再作成できない」エラーが出た場合は、次を実施してよい。
+- 1. 対象バケットの中身を `s3://backup-5352/<YYYYMMDDTHHMMSSZ>/` のようなタイムスタンプ付きサブディレクトリへ退避
+- 2. 対象バケットを空にする
+- 3. パイプラインを再実行する
+
+### レポート必須項目
+- 失敗したパイプライン名、リージョン、実行ID
+- 失敗ステージとAWS側エラーメッセージ
+- 影響範囲（frontendのみか、infrastructure/backendを含むか）
+- 自動修正した場合は修正内容と再実行結果
+
 ## コーディング規約・パターン
 - TypeScript + React（関数コンポーネント）を標準とする。
 - スタイルはChakraUIまたはCSS Modules（`*.module.css`）。
@@ -36,6 +60,7 @@
 ## 注意事項・プロジェクト固有の知識
 - ドキュメントはすべて日本語で記述。
 - チャットでの回答は常に日本語で行う。
+- コミットメッセージは日本語で記述する。
 - AWSアイコンは`references/aws-icons/`以下のカテゴリ・サイズごとに整理。
 - 職務経歴や説明文は`references/職務経歴.txt`を参照。
 - スクリプト実行時はPowerShell前提（Windows環境）。
