@@ -129,10 +129,8 @@ Resources:
             DomainName: !Select [2, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]
             OriginPath: !Join ["", ["/", !Select [3, !Split ["/", !Ref EdgeApiOriginBaseUrlParameter]]]]
             OriginCustomHeaders:
-              Quantity: 1
-              Items:
-                - HeaderName: x-api-key
-                  HeaderValue: !Sub "{{resolve:secretsmanager:${EdgeBeaconApiKeySecretId}:SecretString}}"
+              - HeaderName: x-api-key
+                HeaderValue: !Sub "{{resolve:secretsmanager:${EdgeBeaconApiKeySecretId}:SecretString}}"
             CustomOriginConfig:
               OriginProtocolPolicy: https-only
               HTTPSPort: 443
