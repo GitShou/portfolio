@@ -291,6 +291,34 @@ Resources:
       Tags:
         project: !Ref ProjectName
 
+  BeaconApiKeySecureParameterWriterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${ProjectName}-beacon-api-key-ssm-writer"
+      CodeUri: ../Lambda/src/beacon-api-key-ssm-writer/
+      Handler: index.handler
+      MemorySize: 128
+      Timeout: 30
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:PutParameter
+                - ssm:DeleteParameter
+              Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ProjectName}/edge/beacon/api-key"
+      Tags:
+        project: !Ref ProjectName
+
+  BeaconApiKeySecureParameterCustomResource:
+    Type: Custom::BeaconApiKeySecureParameter
+    DependsOn:
+      - BeaconPageViewApiKeySecret
+      - BeaconApiKeySecureParameterWriterFunction
+    Properties:
+      ServiceToken: !GetAtt BeaconApiKeySecureParameterWriterFunction.Arn
+      Name: !Sub "/${ProjectName}/edge/beacon/api-key"
+      Value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
+
   ParameterWriterCustomResource:
     Type: Custom::ParameterWriter
     DependsOn:
@@ -310,9 +338,6 @@ Resources:
             logicalId: ProjectApi
             stage: !Ref ApiStageName
           type: String
-        - name: !Sub "/${ProjectName}/edge/beacon/api-key"
-          value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
-          type: SecureString
 
   GetProjectsFunction:
     Type: AWS::Serverless::Function
