@@ -39,10 +39,10 @@ Parameters:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Description: Edge(CloudFront API Origin) dedicated base URL stored in SSM Parameter Store
     Default: "/portfolio5352/edge/api-origin-base-url"
-  EdgeBeaconApiKeyParameterPath:
+  EdgeBeaconApiKeySecretId:
     Type: String
-    Description: SSM SecureString parameter path for beacon API key used by CloudFront origin custom header
-    Default: "/portfolio5352/edge/beacon/api-key"
+    Description: Secrets Manager secret id for beacon API key used by CloudFront origin custom header
+    Default: "/portfolio5352/edge/beacon/api-key/secret"
 
 Resources:
   CloudFrontOAI:
@@ -132,7 +132,7 @@ Resources:
               Quantity: 1
               Items:
                 - HeaderName: x-api-key
-                  HeaderValue: !Sub "{{resolve:ssm-secure:${EdgeBeaconApiKeyParameterPath}}}"
+                  HeaderValue: !Sub "{{resolve:secretsmanager:${EdgeBeaconApiKeySecretId}:SecretString}}"
             CustomOriginConfig:
               OriginProtocolPolicy: https-only
               HTTPSPort: 443
