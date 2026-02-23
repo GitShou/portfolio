@@ -247,16 +247,6 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref BeaconPageViewUsagePlan
 
-  BeaconPageViewApiKeyParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${ProjectName}/edge/beacon/api-key"
-      Description: !Sub "${ProjectName} beacon page-view API key for CloudFront origin"
-      Type: SecureString
-      Value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
-      Tags:
-        project: !Ref ProjectName
-
   ProjectApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -303,7 +293,6 @@ Resources:
     Type: Custom::ParameterWriter
     DependsOn:
       - ProjectApi
-      - BeaconPageViewApiKeyParameter
     Properties:
       ServiceToken: !GetAtt ParameterWriterWrapperFunction.Arn
       Parameters:
@@ -319,6 +308,9 @@ Resources:
             logicalId: ProjectApi
             stage: !Ref ApiStageName
           type: String
+        - name: !Sub "/${ProjectName}/edge/beacon/api-key"
+          value: !Sub "{{resolve:secretsmanager:${BeaconPageViewApiKeySecret}:SecretString}}"
+          type: SecureString
 
   GetProjectsFunction:
     Type: AWS::Serverless::Function
