@@ -55,3 +55,6 @@ next-env.d.ts
 /references
 /scripts/log
 /frontend/mocks/projects.json
+
+
+.vscode/settings.json
